@@ -10,6 +10,7 @@ class Card:
     def __str__(self):
         return f'{self.rank} of {self.suit} with value {self.value}'
 
+
 class DeckOfCards:
     def __init__(self):
         self.cards = []
