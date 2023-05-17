@@ -9,6 +9,11 @@ class Card:
 
     def __str__(self):
         return f'{self.rank} of {self.suit} with value {self.value}'
+    
+    def simple_print(self)->str:
+        rank =  self.rank[0]
+        return f' {rank}/{self.suit} '
+        
 
 
 class DeckOfCards:
@@ -32,14 +37,14 @@ class DeckOfCards:
     def shuffle(self):
         random.shuffle(self.cards)
 
-    def remove_card(self, rank, suit):
+    def remove_card(self, rank, suit)->bool:
         for card in self.cards:
             if card.rank == rank and card.suit == suit:
                 self.cards.remove(card)
                 return True
         return False
 
-    def draw_card(self):
+    def draw_card(self)->Card:
         if len(self.cards) > 0:
             return self.cards.pop()
         return None
@@ -49,7 +54,7 @@ class DeckOfCards:
         for card in self.cards:
             print(card)
             
-    def size (self):
+    def size (self)->int:
         return len(self.cards)
 
 
