@@ -4,7 +4,7 @@ class Logger():
     """
     Simple utility class to log messages to the console.
     """
-    def __init__(self, name = "ROOT", level = logging.INFO) -> None:
+    def __init__(self, name = "ROOT", level = logging.DEBUG) -> None:
         formatter = logging.Formatter(fmt='[%(asctime)s][%(levelname)s]: %(message)s')
         handler = logging.StreamHandler()
         handler.setFormatter(formatter)

@@ -9,8 +9,20 @@ class Player:
         self.hand = []
         self.pile = []
         
+    def get_hand(self):
+        return self.hand
+
+    def get_name(self):
+        return self.name
+    
+    def get_pile(self):
+        return self.pile
+
     def add_to_hand(self, card):
         self.hand.append(card)
+
+    def add_to_pile(self, cards):
+        self.pile.extend(cards)
 
     @abstractmethod
     def action(self, world) -> Card:
@@ -27,7 +39,7 @@ class Player:
                 self.hand.remove(card)
                 return card
         return False
-            
+
     def display_hand(self):
         print(f"{self.name}'s hand:")
         hand = '||'
