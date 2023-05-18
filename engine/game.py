@@ -18,7 +18,7 @@ class Trick:
         self.winning_play = None
 
     def get_cards(self) -> list:
-        return self.cards
+        return [card for _, card in self.plays]
     
     def get_starting_suit(self) -> Suit:
         return self.starting_suit
@@ -93,9 +93,6 @@ class Game:
         
         # Set first player
         self.set_first_player(self.player_pool.get_players()[0])
-        
-        for player in self.player_pool.get_players():
-            log.debug(f"{player.name}'s hand: {player.hand}")
 
     def deal_cards(self, num_cards):
         for _ in range(num_cards):
@@ -123,7 +120,10 @@ class Game:
         return player, card_played
 
     def next_round(self):
-        log.info(f"Starting round number {len(self.tricks)}")
+        log.info(f"Starting trick number {len(self.tricks) + 1}")
+
+        for player in self.player_pool.get_players():
+            log.debug(f"{player.get_name()}'s hand: {player.get_hand()}")
 
         # Setup new round
         trick = Trick()
@@ -135,6 +135,7 @@ class Game:
         _, first_card = self.turn()
         trick.set_starting_suit(first_card.suit)
         trick.add_play(self.first_player, first_card)
+        log.info(f"{self.first_player} played {first_card}")
         
         # Advance to next player
         self.player_pool.advance_player()            
@@ -147,6 +148,7 @@ class Game:
             # Adding current play to trick
             player, card_played = self.turn()
             trick.add_play(player, card_played)
+            log.info(f"{player.name} played {card_played}")
         
             self.player_pool.advance_player()
 
@@ -157,6 +159,13 @@ class Game:
         log.info(f"Round winner is {winner.name} with {winning_card}")
 
         self.first_player = winner
+        winner.add_to_pile(trick.get_cards())
+        log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
+
+        # Topping up player hands
+        self.deal_cards(1)
+
+        # TODO: Define end-of-game logic/conditions
 
     def __str__(self):
         print('=====================================================')
