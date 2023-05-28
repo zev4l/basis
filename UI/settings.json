@@ -1,0 +1,13 @@
+{
+	"window": {
+		"size": [570, 460],
+		"title": "BASIS",
+		"background_color": [78, 147, 122]
+	},
+	"card": {
+		"size": [65, 85],
+		"front_sprite_path": "deck-gui/cards/",
+		"back_sprite_file": "img/cards-back.png",
+		"move_speed": 80
+	}
+}

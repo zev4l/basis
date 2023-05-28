@@ -1,0 +1,65 @@
+from dataclasses import dataclass
+from functools import cached_property
+from pathlib import Path
+import sys
+from time import sleep
+import pygame
+from card import Card, CardRank, CardSuit
+from pygame_cards.abstract import AbstractCardGraphics
+from pygame_cards.back import CardBackGraphics
+from deck import BiscaDeck
+
+@dataclass
+class CardGraphics(AbstractCardGraphics):
+
+       # Specify the type of card that this graphics accept
+       card: Card
+
+       # This will be the file where the character is
+       filepath: Path = None
+
+       def __post_init__(self):
+              self.filepath = "deck-gui/cards/" + str(self.card.suit.value) + "-" + str(self.card.rank.value) + ".png"
+
+       @cached_property
+       def surface(self) -> pygame.Surface:
+              self.size = (100, 150)
+
+              # Size is a property from AbstractCardGraphics
+              x, y = self.size
+
+              # Create the surface on which we will plot the card
+              surf = pygame.Surface(self.size)
+
+              if self.filepath is not None:
+                     # Load the image of our character
+                     picture = pygame.image.load(self.filepath)
+                     # Rescale it to fit the surface
+                     surf.blit(pygame.transform.scale(picture, self.size), (0, 0))
+              return surf
+       
+@dataclass
+class CardBackGraphics(CardBackGraphics):
+
+       # Specify the type of card that this graphics accept
+       card: Card
+
+       # This will be the file where the character is
+       filepath: Path = "deck-gui/cards-back.png"    
+
+       @cached_property
+       def surface(self) -> pygame.Surface:
+              self.size = (100, 150)   
+
+              # Size is a property from AbstractCardGraphics
+              x, y = self.size
+
+              # Create the surface on which we will plot the card
+              surf = pygame.Surface(self.size)
+
+              if self.filepath is not None:
+                     # Load the image of our character
+                     picture = pygame.image.load(self.filepath)
+                     # Rescale it to fit the surface
+                     surf.blit(pygame.transform.scale(picture, self.size), (0, 0))
+              return surf
