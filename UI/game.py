@@ -1,6 +1,6 @@
 import sys
-from time import sleep
 import pygame
+from time import sleep
 from deck import BiscaDeck
 from graphics import CardGraphics, CardBackGraphics
 
@@ -8,24 +8,29 @@ from graphics import CardGraphics, CardBackGraphics
 pygame.init()
 
 # Set up the screen
-size = width, height = 800, 700
+size = width, height = 1000, 800
 screen = pygame.display.set_mode(size)
-screen.fill("green")
+screen.fill((0, 100, 0))  # Use dark green color
 
 # Create card graphics
 for card in BiscaDeck:
     card.graphics = CardGraphics(card)
     card.back_graphics = CardBackGraphics(card)
 
-# Create players' hands
-player1_hand = BiscaDeck[:3]
-player2_hand = BiscaDeck[3:6]
+# Define the number of players and their positions
+num_players = 6
+player_positions = [(375, 50), (375, 600), (25, 200), (725, 450), (25, 450), (725, 200)]
 
-# Set up card positions
-player1_hand_positions = [(200 + i * (player1_hand[i].graphics.size[0]), 500) for i in range(3)]
-player2_hand_positions = [(200 + i * (player2_hand[i].graphics.size[0]), 50) for i in range(3)]
-deck_position = (265, 275)
-trump_position = (385, 275)
+# Create players' hands
+hands = [BiscaDeck[i * 3: (i + 1) * 3] for i in range(num_players)]
+
+# Set up card positions for each player
+hand_positions = [[(position[0] + i * (card.graphics.size[0] - 25), position[1]) for i in range(3)] for position in player_positions]
+
+
+# Set up deck and trump positions
+deck_position = (412, 350)
+trump_position = (512, 350)
 
 # Main game loop
 while True:
@@ -36,13 +41,23 @@ while True:
     # Draw background
     screen.fill((0, 100, 0))
 
-    # Draw player 1's hand
-    for card, position in zip(player1_hand, player1_hand_positions):
-        screen.blit(card.graphics.surface, position)
+    # Draw players' hands and labels
+    for i, (hand, position) in enumerate(zip(hands, player_positions)):
+        # Draw cards in hand
+        for card, card_position in zip(hand, hand_positions[i]):
+            screen.blit(card.graphics.surface, card_position)
 
-    # Draw player 2's hand
-    for card, position in zip(player2_hand, player2_hand_positions):
-        screen.blit(card.graphics.surface, position)
+        # Draw player label
+        font = pygame.font.Font(None, 24)
+        label = font.render(f"Player {i+1}", True, pygame.Color("white"))
+        label_rect = label.get_rect(center=(position[0] + 125, position[1] + 140))
+        screen.blit(label, label_rect)
+
+        # Draw player score
+        score = 0  # Replace with the actual score of the player
+        score_label = font.render(f"Score: {score} points", True, pygame.Color("white"))
+        score_rect = score_label.get_rect(center=(position[0] + 125, position[1] + 160))
+        screen.blit(score_label, score_rect)
 
     # Draw deck
     screen.blit(BiscaDeck[-1].back_graphics.surface, deck_position)
@@ -54,3 +69,4 @@ while True:
 
     # Limit the frame rate
     sleep(0.1)
+
