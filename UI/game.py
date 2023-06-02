@@ -1,72 +1,265 @@
 import sys
 import pygame
+import random
 from time import sleep
 from deck import BiscaDeck
-from graphics import CardGraphics, CardBackGraphics
+from graphics import CardGraphics, CardBackGraphics, CardGraphicsExtended
+from button import Button
+import threading
+import copy
 
-# Initialize the game
-pygame.init()
+class BiscaGame:
+    def __init__(self):
+        # Initialize the game
+        pygame.init()
 
-# Set up the screen
-size = width, height = 1000, 800
-screen = pygame.display.set_mode(size)
-screen.fill((0, 100, 0))  # Use dark green color
+        # Set up the screen
+        self.size = self.width, self.height = 1000, 800
+        self.screen = pygame.display.set_mode(self.size)
+        self.screen.fill((0, 100, 0))  # Use dark green color
 
-# Create card graphics
-for card in BiscaDeck:
-    card.graphics = CardGraphics(card)
-    card.back_graphics = CardBackGraphics(card)
+        # Define the number of players and their positions
+        self.num_players = 3
+        position1 = (375, 50)
+        position2 = (725, 200)
+        position3 = (725, 450)
+        position4 = (375, 600)
+        position5 = (25, 450)
+        position6 = (25, 200)
+        if self.num_players == 2:
+            self.player_positions = [position1, position4]
+        if self.num_players == 3:
+            self.player_positions = [position1, position3, position5]
+        if self.num_players == 4:
+            self.player_positions = [position1, position2, position4, position5]
+        if self.num_players == 5:
+            self.player_positions = [position1, position2, position3, position4, position5]
+        if self.num_players == 6:
+            self.player_positions = [position1, position2, position3, position4, position5, position6]
 
-# Define the number of players and their positions
-num_players = 6
-player_positions = [(375, 50), (375, 600), (25, 200), (725, 450), (25, 450), (725, 200)]
+        # Define game state variables
+        self.current_player = 0
+        self.game_over = False
+        self.player_scores = [0 for x in range(self.num_players)]
+        self.player_takes_hand = 0
+        self.player_takes_hand_text = ""
+        self.hands = [BiscaDeck[i * 3: (i + 1) * 3] for i in range(self.num_players)]
+        self.trump = BiscaDeck[-2]
+        self.deck = [card for card in BiscaDeck if card not in self.hands[self.current_player] and card != self.trump]
+        self.table = {player_num: None for player_num in range(self.num_players)}
+        self.play_again_button = Button(400, 500, 200, 50, "Play Again", self.play_again)
+        self.cardbuttons = []
+        self.no_more_cards = False
 
-# Create players' hands
-hands = [BiscaDeck[i * 3: (i + 1) * 3] for i in range(num_players)]
+        self.last_clicked = pygame.time.get_ticks()
 
-# Set up card positions for each player
-hand_positions = [[(position[0] + i * (card.graphics.size[0] - 25), position[1]) for i in range(3)] for position in player_positions]
+    # Define Play Again Button
+    def play_again(self):
+        self.start_game()
+    
+    def shuffle_cards(self, deck):
+            random.shuffle(deck)
+    
+    def isTableFull(self):
+        return all(value is not None for value in self.table.values())
+    
+    def isTableNotEmpty(self):
+        return any(value is not None for value in self.table.values())
 
 
-# Set up deck and trump positions
-deck_position = (412, 350)
-trump_position = (512, 350)
+    def handle_card_click(self, card):
+        if pygame.time.get_ticks() - self.last_clicked >= 500:
+            if card in self.hands[self.current_player]:
+                # forbid renuncia
+                if not self.renuncia(card):
+                    self.last_clicked = pygame.time.get_ticks()
 
-# Main game loop
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
+                    card.graphics.position = (card.graphics.position[0], card.graphics.position[1] - 25)  # Move the card up by 50 pixels
+                    
+                    self.table[self.current_player] = card
+                    
+                    if not self.isTableFull():
+                        if self.current_player < self.num_players - 1:
+                            self.current_player += 1
+                        else:
+                            self.current_player = 0
+                    else: # deal with end of trick
+                        player_wins = self.end_trick()
+                        self.player_takes_hand = copy.deepcopy(player_wins)
+                        self.show_player_takes_hand(player_wins)
 
-    # Draw background
-    screen.fill((0, 100, 0))
+                        trickpoints = 0
+                        for tablecard in self.table.values():
+                            trickpoints += tablecard.points
+                        self.player_scores[player_wins] += trickpoints
 
-    # Draw players' hands and labels
-    for i, (hand, position) in enumerate(zip(hands, player_positions)):
-        # Draw cards in hand
-        for card, card_position in zip(hand, hand_positions[i]):
-            screen.blit(card.graphics.surface, card_position)
+                        empty_positions = self.remove_cards_from_hands()
+                        self.deal_cards(empty_positions)
 
-        # Draw player label
-        font = pygame.font.Font(None, 24)
-        label = font.render(f"Player {i+1}", True, pygame.Color("white"))
-        label_rect = label.get_rect(center=(position[0] + 125, position[1] + 140))
-        screen.blit(label, label_rect)
+                        self.current_player = copy.deepcopy(player_wins)
+    
+    def renuncia(self, card):
+        if self.isTableNotEmpty():
+            current_suit = self.table[self.player_takes_hand].suit
+            possible_cards = []
+            for handcard in self.hands[self.current_player]:
+                if handcard.suit == current_suit:
+                    possible_cards.append(handcard)
+            if len(possible_cards) == 0:
+                return False
+            else:
+                return card not in possible_cards
+        return False
+    
+    def end_trick(self):
+        # stub
+        # define who takes the trick
+        trumpcards = []
+        for cardnum in range(self.num_players):
+            if self.table[cardnum].suit == self.trump.suit:
+                trumpcards.append((self.table[cardnum], cardnum))
+        
+        if len(trumpcards) > 0:
+            max_card = max(trumpcards, key=lambda item: item[0].value)
+            return max_card[1]
+        
+        suitecards = []
+        for cardnum in range(self.num_players):
+            if self.table[cardnum].suit == self.table[self.player_takes_hand].suit:
+                suitecards.append((self.table[cardnum], cardnum))
+        
+        max_card = max(suitecards, key=lambda item: item[0].value)
+        return max_card[1]
+    
+    def remove_cards_from_hands(self):
+        positions = []
+        for playernum in range(self.num_players):
+            positions.append((self.table[playernum].graphics.position[0], self.table[playernum].graphics.position[1] + 25))
+            self.hands[playernum].remove(self.table[playernum])
+            self.cardbuttons.remove(self.table[playernum].button)
+        self.table = {player_num: None for player_num in range(self.num_players)}
+        return positions
 
-        # Draw player score
-        score = 0  # Replace with the actual score of the player
-        score_label = font.render(f"Score: {score} points", True, pygame.Color("white"))
-        score_rect = score_label.get_rect(center=(position[0] + 125, position[1] + 160))
-        screen.blit(score_label, score_rect)
+    def deal_cards(self, empty_positions):
+        for playernum in range(self.num_players):
+            if len(self.deck) > 0:
+                self.hands[playernum].append(self.deck[0])
+                dealtcard = self.hands[playernum][-1]
+                dealtcard.graphics.position = empty_positions[playernum]
+                dealtcard.button = Button(dealtcard.graphics.position[0], dealtcard.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=dealtcard: self.handle_card_click(c))
+                self.cardbuttons.append(dealtcard.button)
+                self.deck.pop(0)
+            else:
+                if not self.no_more_cards:
+                    self.hands[playernum].append(self.trump)
+                    dealtcard = self.hands[playernum][-1]
+                    dealtcard.graphics.position = empty_positions[playernum]
+                    dealtcard.button = Button(dealtcard.graphics.position[0], dealtcard.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=dealtcard: self.handle_card_click(c))
+                    self.cardbuttons.append(dealtcard.button)
+                else:
+                    self.no_more_cards = True
+            
+    def show_player_takes_hand(self, player):
+        self.player_takes_hand_text = "Player "+str(player+1)+" takes trick"
+        timer = threading.Timer(3, self.reset_player_takes_hand)
+        timer.start()
 
-    # Draw deck
-    screen.blit(BiscaDeck[-1].back_graphics.surface, deck_position)
+    def reset_player_takes_hand(self):
+        self.player_takes_hand_text = ""
+        
+    def start_game(self):
+        # Shuffle the deck
+        self.shuffle_cards(BiscaDeck)
 
-    # Draw trump card
-    screen.blit(BiscaDeck[-2].graphics.surface, trump_position)
+        # Create players' hands
+        self.hands = [BiscaDeck[i * 3: (i + 1) * 3] for i in range(self.num_players)]
+        self.trump = BiscaDeck[-2]
+        dealtcards = [self.trump]
+        for hand in self.hands:
+            for card in hand:
+                dealtcards.append(card)
+        self.deck = [card for card in BiscaDeck if card not in dealtcards]
 
-    pygame.display.flip()
+        # Replace CardGraphics with CardGraphicsExtended in card graphics creation
+        for card in self.deck:
+            card.graphics = CardGraphicsExtended(card)
+            card.back_graphics = CardBackGraphics(card)
+        for hand in self.hands:
+            for card in hand:
+                card.graphics = CardGraphicsExtended(card)
+                card.back_graphics = CardBackGraphics(card)
+        self.trump.graphics = CardGraphicsExtended(self.trump)
+        self.trump.back_graphics = CardBackGraphics(self.trump)
+    
+        # Set up card positions for each player
+        hand_positions = [[(position[0] + i * (CardGraphicsExtended.size[0] - 25), position[1]) for i in range(3)] for position in self.player_positions]
 
-    # Limit the frame rate
-    sleep(0.1)
+        # Set up deck and trump positions
+        deck_position = (412, 350)
+        trump_position = (512, 350)
 
+        # Create buttons for each card
+        for i, hand in enumerate(self.hands):
+            for card, position in zip(hand, hand_positions[i]):
+                card.graphics.position = position
+                card.button = Button(position[0], position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=card: self.handle_card_click(c))
+                self.cardbuttons.append(card.button)
+
+        # Main game loop
+        while not self.game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                self.play_again_button.handle_event(event)
+                for button in self.cardbuttons:
+                    button.handle_event(event)
+
+            # Draw background
+            self.screen.fill((0, 100, 0))
+
+            # Draw players' hands and labels
+            for i, (hand, position) in enumerate(zip(self.hands, self.player_positions)):
+                # Draw cards in hand
+                for card in hand:
+                    self.screen.blit(card.graphics.surface, card.graphics.position)
+
+                # Draw player label
+                font = pygame.font.Font(None, 24)
+                label = font.render(f"Player {i+1}", True, pygame.Color("white"))
+                label_rect = label.get_rect(center=(position[0] + 125, position[1] + 140))
+                self.screen.blit(label, label_rect)
+
+                # Draw player score
+                score_label = font.render(f"Score: {self.player_scores[i]} points", True, pygame.Color("white"))
+                score_rect = score_label.get_rect(center=(position[0] + 125, position[1] + 160))
+                self.screen.blit(score_label, score_rect)
+
+            # Draw deck
+            self.screen.blit(BiscaDeck[-1].back_graphics.surface, deck_position)
+
+            # Draw trump card
+            self.screen.blit(BiscaDeck[-2].graphics.surface, trump_position)
+
+            if self.game_over != True:
+                # Draw current player text
+                current_player_label = font.render(f"Player {self.current_player + 1} is playing", True, pygame.Color("white"))
+                current_player_rect = current_player_label.get_rect(center=(self.width // 2, self.height - 300))
+                self.screen.blit(current_player_label, current_player_rect)
+
+                # Draw player takes hand text
+                player_takes_hand_label = font.render(self.player_takes_hand_text, True, pygame.Color("white"))
+                player_takes_hand_rect = player_takes_hand_label.get_rect(center=(self.width // 2, self.height - 275))
+                self.screen.blit(player_takes_hand_label, player_takes_hand_rect)
+
+            # Draw Play Again Button
+            if self.game_over == True:
+                self.play_again_button.draw(self.screen)
+
+            pygame.display.flip()
+
+            # Limit the frame rate
+            sleep(0.1)
+
+# Start the first game
+game = BiscaGame()
+game.start_game()

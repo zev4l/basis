@@ -63,3 +63,8 @@ class CardBackGraphics(CardBackGraphics):
                      # Rescale it to fit the surface
                      surf.blit(pygame.transform.scale(picture, self.size), (0, 0))
               return surf
+       
+class CardGraphicsExtended(CardGraphics):
+    def __init__(self, card):
+        super().__init__(card)
+        self.position = (0, 0)

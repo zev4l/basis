@@ -26,4 +26,6 @@ class CardRank(Enum):
 class Card(AbstractCard):
     rank: CardRank
     suit: CardSuit
+    value: int
+    points: int
 
