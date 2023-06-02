@@ -14,12 +14,14 @@ log = Logger()
 class Trick:
     def __init__(self):
         self.plays = [] # List of tuples (player, card)
-        self.starting_suit = []
+        self.starting_suit = None
         self.winning_play = None
 
     def get_cards(self) -> list:
         return [card for _, card in self.plays]
     
+
+
     def get_starting_suit(self) -> Suit:
         return self.starting_suit
     
@@ -34,6 +36,7 @@ class Trick:
 
     def set_winning_play(self, play : tuple):
         self.winning_play = play
+    
 
     def calc_winner(self, trump_suit : Suit):
         """
@@ -108,9 +111,9 @@ class Game:
                     log.debug(f"Dealt trump card {card} to {player.name}")
                     self.trump_card = None
         
-    def turn(self)-> Card:
+    def turn(self, trick  : Trick)-> Card:
         player = self.player_pool.get_current_player()
-        card_played = player.action(self)
+        card_played = player.action(self, trick)
 
         # TODO: Validate played card here (i.e. valid suit, etc.), repeat if card_played is invalid
 
@@ -132,7 +135,7 @@ class Game:
         self.player_pool.set_current_player(self.first_player) 
         
         # Draw first card, and setting its suit as the round's suit
-        _, first_card = self.turn()
+        _, first_card = self.turn( trick)
         trick.set_starting_suit(first_card.suit)
         trick.add_play(self.first_player, first_card)
         log.info(f"{self.first_player} played {first_card}")
@@ -146,7 +149,7 @@ class Game:
             sleep(ROUND_DELAY_SECONDS)
 
             # Adding current play to trick
-            player, card_played = self.turn()
+            player, card_played = self.turn(trick)
             trick.add_play(player, card_played)
             log.info(f"{player.name} played {card_played}")
         
