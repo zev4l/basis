@@ -73,7 +73,6 @@ class Human(Player):
     Represents a human player
     """
     def __init__(self, name):
-        name = input("What's your name?")
         Player.__init__(self, name)
     
     def action(self, state) -> Card: 

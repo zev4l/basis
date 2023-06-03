@@ -4,10 +4,11 @@ from pathlib import Path
 import sys
 from time import sleep
 import pygame
-from card import Card, CardRank, CardSuit
 from pygame_cards.abstract import AbstractCardGraphics
 from pygame_cards.back import CardBackGraphics
-from deck import BiscaDeck
+
+from UI.card import Card, CardRank, CardSuit
+from UI.deck import BiscaDeck
 
 @dataclass
 class CardGraphics(AbstractCardGraphics):

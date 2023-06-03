@@ -2,16 +2,22 @@ import sys
 import pygame
 import random
 from time import sleep
-from deck import BiscaDeck
-from graphics import CardGraphics, CardBackGraphics, CardGraphicsExtended
-from button import Button
 import threading
 import copy
 
-class BiscaGame:
+# Local UI imports
+from UI.deck import BiscaDeck
+from UI.graphics import CardGraphics, CardBackGraphics, CardGraphicsExtended
+from UI.button import Button
+
+class BiscaGameUI:
     def __init__(self):
         # Initialize the game
         pygame.init()
+
+        # -----------------------------------------------------
+        # ------------------- Positioning ---------------------
+        # -----------------------------------------------------
 
         # Set up the screen
         self.size = self.width, self.height = 1000, 800
@@ -37,9 +43,13 @@ class BiscaGame:
         if self.num_players == 6:
             self.player_positions = [position1, position2, position3, position4, position5, position6]
 
+        # -----------------------------------------------------
+        # -------------------- Variables ----------------------
+        # -----------------------------------------------------
+
         # Define game state variables
         self.current_player = 0
-        self.game_over = False
+        self.game_status = "Initial" # [Initial, Auto, Wait, Finished]
         self.player_scores = [0 for x in range(self.num_players)]
         self.player_takes_hand = 0
         self.player_takes_hand_text = ""
@@ -52,6 +62,89 @@ class BiscaGame:
         self.no_more_cards = False
 
         self.last_clicked = pygame.time.get_ticks()
+
+        # Initial screen selection of agents for game
+        self.agent_count = dict()
+
+        # Keep active buttons
+        self.buttons = []
+
+    def showInitialScreen(self, agents):
+        while self.game_status == "Initial":
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for button in self.buttons:
+                        button.handle_event(event)
+
+            # Draw background
+            self.screen.fill((0, 100, 0))
+
+            self.buttons = []  # Initialize the list of buttons
+
+            for agentnr in range(len(agents)):
+                agent = copy.deepcopy(agents[agentnr])
+
+                if agent not in self.agent_count.keys():
+                    self.agent_count[agent] = 0
+
+                # Render and display the agent text
+                self.drawText(agent, 500, 200 + agentnr * 40, alignment="right")
+
+                # Create and display the minus button
+                minus_button = Button(520 - 10, 200 + agentnr * 40 - 10, 20, 20, "-", lambda agent=agent: self.removeAgent(agent), backgroundcolor=(0, 100, 0))
+                minus_button.draw(self.screen)
+                self.buttons.append(minus_button)
+
+                # Render and display the agent count text
+                font = pygame.font.Font(None, 24)
+                agent_count_label = font.render(f"{self.agent_count[agent]}", True, pygame.Color("white"))
+                agent_count_rect = agent_count_label.get_rect(center=(535, 200 + agentnr * 40))
+                self.screen.blit(agent_count_label, agent_count_rect)
+
+                # Create and display the plus button
+                plus_button = Button(542, 200 + agentnr * 40 - 10, 20, 20, "+", lambda agent=agent: self.addAgent(agent), backgroundcolor=(0, 100, 0))
+                plus_button.draw(self.screen)
+                self.buttons.append(plus_button)
+
+            start_game_button = Button(425, 200 + len(agents) * 40 + 5, 150, 50, "Start Game", self.startGame)
+            start_game_button.draw(self.screen)
+            self.buttons.append(start_game_button)
+
+            self.drawText("Maximum number of Players is 6", 500, 200 + len(agents) * 40 + 75)
+
+            pygame.display.flip()
+
+            # Limit the frame rate
+            sleep(0.1)
+
+        return self.agent_count
+
+    def startGame(self):
+        if sum(self.agent_count.values()) > 0:
+            self.buttons = []
+            self.game_status = "Auto"
+
+    def removeAgent(self, agent):
+        if self.agent_count[agent] > 0:
+            self.agent_count[agent] -= 1
+
+    def addAgent(self, agent):
+        if sum(self.agent_count.values()) < 6:
+            self.agent_count[agent] += 1
+
+    def drawText(self, text, x, y, alignment="center", size=24, color=pygame.Color("white")):
+        font = pygame.font.Font(None, size)
+        label = font.render(text, True, color)
+        if alignment == "center":
+            label_rect = label.get_rect(center=(x, y))
+        elif alignment == "right":
+            label_rect = label.get_rect(right=x, centery=y)
+        elif alignment == "left":
+            label_rect = label.get_rect(left=x, centery=y)
+        self.screen.blit(label, label_rect)
+        return label
 
     # Define Play Again Button
     def play_again(self):
@@ -214,9 +307,6 @@ class BiscaGame:
                 for button in self.cardbuttons:
                     button.handle_event(event)
 
-            # Draw background
-            self.screen.fill((0, 100, 0))
-
             # Draw players' hands and labels
             for i, (hand, position) in enumerate(zip(self.hands, self.player_positions)):
                 # Draw cards in hand
@@ -259,7 +349,3 @@ class BiscaGame:
 
             # Limit the frame rate
             sleep(0.1)
-
-# Start the first game
-game = BiscaGame()
-game.start_game()
