@@ -44,19 +44,20 @@ class Player:
     def playable_cards(self, world):
         current_suit = world.current_trick.get_starting_suit()
 
-        if current_suit:
-            trump = world.trump_suit
+        world.trump_suit
 
-            valid_hand = []
+        valid_hand = []
 
-            for card in self.hand:
-                if card.suit == current_suit or card.suit == trump:
-                    valid_hand.append(card)
+        # If the user has a card of the current suit, he must play it
+        for card in self.hand:
+            if card.suit == current_suit:
+                valid_hand.append(card)
 
-            if len(valid_hand) > 0:
-                return valid_hand
+        # If the user has no cards of the current suit, he can play any card
+        if len(valid_hand) == 0:
+            valid_hand = self.hand
 
-        return self.hand
+        return valid_hand
 
     def display_hand(self):
         print(f"{self.name}'s hand:")
@@ -75,14 +76,27 @@ class Human(Player):
     """
 
     def __init__(self, name):
-        super().__init__(name, "Human")
+        super().__init__(self, name, "Human")
+        self.input = None
+    
+    def action(self, world) -> Card: 
+        # Await input population
+        while not self.input:
+            pass
 
-    def action(self, world) -> Card:
-        # Collect user's card-choice, accounting for print_hand's 0-index change
-        card_idx = int(input("Choose your card: ")) - 1
-        card = self.hand[card_idx]
+        # Show the user his hand
+        self.print_hand()
+
+        # Collect user's card-choice
+        card = self.hand[self.input]
+
+        # Reset input
+        self.input = None
 
         return card
+    
+    def set_input(self, input):
+        self.input = input
 
 
 # AGENTS
