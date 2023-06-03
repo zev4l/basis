@@ -73,28 +73,15 @@ class Human(Player):
     Represents a human player
     """
     def __init__(self, name):
-        name = input("What's your name?")
-        super.__init__(self, name, "Human")
+        super().__init__(name, "Human")
 
     
     def action(self, world) -> Card: 
-        # Show the user the current game-state
-        world.print()
-
-        # Show the user his hand
-        self.print_hand()
-
         # Collect user's card-choice, accounting for print_hand's 0-index change
         card_idx = int(input("Choose your card: ")) - 1
         card = self.hand[card_idx]
 
-        print(f'Card played: {card}')
-
         return card
-    
-    def print_hand(self):
-        output = "\n".join([f"{n + 1} {card}" for n, card in enumerate(self.hand)])
-        print(output)
 
 # AGENTS
 

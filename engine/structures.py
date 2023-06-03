@@ -126,3 +126,4 @@ class State(Enum):
     EXPECTING_INPUT = 2
     OVER = 3
     DRAW = 4
+    INIT = 5

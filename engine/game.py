@@ -7,7 +7,7 @@ from time import sleep
 # Constants
 MIN_PLAYERS = 2
 CARDS_PER_PLAYER = 3
-ROUND_DELAY_SECONDS = 0.5
+ROUND_DELAY_SECONDS = 2.5
 
 log = Logger()
 
@@ -62,7 +62,7 @@ class Game:
     Houses main game logic, including tricks and winning logic.
     """
     def __init__(self, stats_recorder : StatsRecorder = None):
-        self.state = State.RUNNING
+        self.state = State.INIT
         self.tricks = []
         self.current_trick = None
         self.deck = Deck() # The deck is shuffled at instantiation
