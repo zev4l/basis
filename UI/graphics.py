@@ -7,8 +7,8 @@ import pygame
 from pygame_cards.abstract import AbstractCardGraphics
 from pygame_cards.back import CardBackGraphics
 
-from UI.card import Card, CardRank, CardSuit
-from UI.deck import BiscaDeck
+from card import Card, CardRank, CardSuit
+from deck import BiscaDeck
 
 @dataclass
 class CardGraphics(AbstractCardGraphics):

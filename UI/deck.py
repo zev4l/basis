@@ -1,4 +1,4 @@
-from UI.card import Card, CardSuit, CardRank
+from card import Card, CardSuit, CardRank
 from pygame_cards.set import CardsSet
 
 BiscaDeck = CardsSet(

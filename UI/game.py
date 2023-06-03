@@ -1,4 +1,5 @@
 import sys
+import os
 import pygame
 import random
 from time import sleep
@@ -6,9 +7,18 @@ import threading
 import copy
 
 # Local UI imports
-from UI.deck import BiscaDeck
-from UI.graphics import CardGraphics, CardBackGraphics, CardGraphicsExtended
-from UI.button import Button
+from deck import BiscaDeck
+from graphics import CardGraphics, CardBackGraphics, CardGraphicsExtended
+from button import Button
+
+
+# directory reach
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+from engine.game import Game
+from engine.players import Player, Human, RandomAgent, SimpleGreedyAgent
+from engine.structures import State
 
 class BiscaGameUI:
     def __init__(self):
@@ -49,7 +59,6 @@ class BiscaGameUI:
 
         # Define game state variables
         self.current_player = 0
-        self.game_status = "Initial" # [Initial, Auto, Wait, Finished]
         self.player_scores = [0 for x in range(self.num_players)]
         self.player_takes_hand = 0
         self.player_takes_hand_text = ""
@@ -69,8 +78,39 @@ class BiscaGameUI:
         # Keep active buttons
         self.buttons = []
 
+        # -----------------------------------------------------
+        # ---------------------- Game -------------------------
+        # -----------------------------------------------------
+
+        self.game = Game()
+
+        # Get all available agents
+        agent_types = dict()
+        agent_names = []
+        for subclass in Player.__subclasses__():
+            agent_types[subclass.__name__] = subclass
+            agent_names.append(subclass.__name__)
+
+        agent_count = self.showInitialScreen(agent_names)
+
+        print("here")
+
+        player_count = 1
+        for agent in agent_count.keys():
+            for playernr in range(agent_count[agent]):
+                player = agent_types[agent](f'Player {str(player_count)} ({agent})')
+                self.game.add_player(player)
+                player_count += 1
+
+        self.game.start_match()
+
+        #while not game.is_over():
+        #	game.next_round()
+
+        #print("GAME DONE")
+
     def showInitialScreen(self, agents):
-        while self.game_status == "Initial":
+        while self.game.state == State.INIT:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
@@ -349,3 +389,6 @@ class BiscaGameUI:
 
             # Limit the frame rate
             sleep(0.1)
+
+
+BiscaGameUI()
