@@ -1,4 +1,4 @@
-from engine.structures import Card,Rank,Suit
+from engine.structures import Card, Rank, Suit
 from abc import abstractmethod
 from random import choice
 
@@ -25,7 +25,7 @@ class Player:
         self.pile.extend(cards)
 
     @abstractmethod
-    def action(self, world,  trick) -> Card:
+    def action(self, world) -> Card:
         """
         This function is meant to be the brains of the player, and should be implemented differently based on the player's nature/strategy
         """
@@ -40,21 +40,20 @@ class Player:
                 return card
         return False
     
-    def playable_cards(self, world, trick):
-        
-        current_suit  =  trick.get_starting_suit()
+    def playable_cards(self, world):
+        current_suit  =  world.current_trick.get_starting_suit()
 
-        if (current_suit !=  None ):
-            trump =  world.trump_suit
+        if (current_suit):
+            trump = world.trump_suit
         
-            play_hand =[];
+            valid_hand = []
 
             for card in self.hand:
                  if card.suit == current_suit or card.suit == trump:
-                    play_hand.append(card)
+                    valid_hand.append(card)
         
-            if len(play_hand)>0 :
-                return play_hand
+            if len(valid_hand) > 0:
+                return valid_hand
 
         return self.hand
 
@@ -89,7 +88,6 @@ class Human(Player):
         print(f'Card played: {card}')
 
         return card
-
     
     def print_hand(self):
         output = "\n".join([f"{n + 1} {card}" for n, card in enumerate(self.hand)])
@@ -104,9 +102,9 @@ class RandomAgent(Player):
     def __init__(self, name):
         Player.__init__(self, name)
 
-    def action(self, world, trick) -> Card:
+    def action(self, world) -> Card:
         
-        play_cards = self.playable_cards(world, trick)
+        play_cards = self.playable_cards(world)
 
         print(self)
         print (play_cards)
@@ -115,7 +113,7 @@ class RandomAgent(Player):
         return choice(play_cards)
     
     
-class SimpleGreedAgent(Player):
+class SimpleGreedyAgent(Player):
     """
     this Agent will always play the highest valued card possible
     if more than one card have the same rank  it will randomly pick
@@ -123,14 +121,14 @@ class SimpleGreedAgent(Player):
     def __init__(self, name):
         Player.__init__(self, name)
         
-    def highest_card(self,hand : Card)->Card:
+    def highest_card(self, hand : Card)->Card:
         
         high_card =  hand[0]
 
         top_cards = []
 
-        for card  in hand : 
-            if ( card.rank > high_card.rank):
+        for card in hand : 
+            if (card.rank > high_card.rank):
                 high_card =card
         
         for card in hand : 
@@ -139,16 +137,16 @@ class SimpleGreedAgent(Player):
         
         return top_cards
 
-    def action(self, world, trick) -> Card:
+    def action(self, world) -> Card:
         
-        play_cards = self.playable_cards(world, trick)
+        play_cards = self.playable_cards(world)
 
         print(self)
         print (play_cards)
         
         return choice(self.highest_card(play_cards) )
     
-class looseNoPointsGreedAgent(Player):
+class MinimizePointLossGreedyAgent(Player):
     """
     this Agent will always play the card that wont loose him points 
     will also jump at the bit to make points 
@@ -158,9 +156,9 @@ class looseNoPointsGreedAgent(Player):
     def __init__(self, name):
         Player.__init__(self, name)
         
-    def action(self,world,trick)-> Card:
+    def action(self, world)-> Card:
         
-        play_cards = self.playable_cards(world, trick)
+        play_cards = self.playable_cards(world)
         print(self)
         print (play_cards)
         

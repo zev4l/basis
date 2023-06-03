@@ -19,8 +19,6 @@ class Trick:
 
     def get_cards(self) -> list:
         return [card for _, card in self.plays]
-    
-
 
     def get_starting_suit(self) -> Suit:
         return self.starting_suit
@@ -37,7 +35,6 @@ class Trick:
     def set_winning_play(self, play : tuple):
         self.winning_play = play
     
-
     def calc_winner(self, trump_suit : Suit):
         """
         Calculates the winner of the trick. The winner is the player who played the highest card of the starting suit, 
@@ -63,6 +60,7 @@ class Trick:
 class Game:
     def __init__(self, stats_recorder : StatsRecorder = None):
         self.tricks = []
+        self.current_trick = None
         self.deck = Deck() # The deck is shuffled at instantiation
         self.player_pool = Pool()
         self.next_player : Player
@@ -111,9 +109,9 @@ class Game:
                     log.debug(f"Dealt trump card {card} to {player.name}")
                     self.trump_card = None
         
-    def turn(self, trick  : Trick)-> Card:
+    def turn(self) -> Card:
         player = self.player_pool.get_current_player()
-        card_played = player.action(self, trick)
+        card_played = player.action(self)
 
         # TODO: Validate played card here (i.e. valid suit, etc.), repeat if card_played is invalid
 
@@ -129,15 +127,15 @@ class Game:
             log.debug(f"{player.get_name()}'s hand: {player.get_hand()}")
 
         # Setup new round
-        trick = Trick()
+        self.current_trick = Trick()
         
         # Set first player
         self.player_pool.set_current_player(self.first_player) 
         
         # Draw first card, and setting its suit as the round's suit
-        _, first_card = self.turn( trick)
-        trick.set_starting_suit(first_card.suit)
-        trick.add_play(self.first_player, first_card)
+        _, first_card = self.turn()
+        self.current_trick.set_starting_suit(first_card.suit)
+        self.current_trick.add_play(self.first_player, first_card)
         log.info(f"{self.first_player} played {first_card}")
         
         # Advance to next player
@@ -149,20 +147,20 @@ class Game:
             sleep(ROUND_DELAY_SECONDS)
 
             # Adding current play to trick
-            player, card_played = self.turn(trick)
-            trick.add_play(player, card_played)
+            player, card_played = self.turn()
+            self.current_trick.add_play(player, card_played)
             log.info(f"{player.name} played {card_played}")
         
             self.player_pool.advance_player()
 
-        self.tricks.append(trick)
+        self.tricks.append(self.current_trick)
 
         # Calculating winner, saving trick and setting next-round first player
-        winner, winning_card = trick.calc_winner(self.trump_suit)
+        winner, winning_card = self.current_trick.calc_winner(self.trump_suit)
         log.info(f"Round winner is {winner.name} with {winning_card}")
 
         self.first_player = winner
-        winner.add_to_pile(trick.get_cards())
+        winner.add_to_pile(self.current_trick.get_cards())
         log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
 
         # Topping up player hands

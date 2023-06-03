@@ -1,8 +1,15 @@
 from engine.game import Game
+<<<<<<< HEAD
 from engine.players import Player, Human, RandomAgent, SimpleGreedAgent
 from UI.game import BiscaGameUI
 
 # Start the first game
+=======
+from engine.players import Human, RandomAgent, SimpleGreedyAgent
+
+player1 = RandomAgent("Player 1")
+player2 = SimpleGreedyAgent("Player 2")
+>>>>>>> 4e1081643b6e0e3778285aeaa45baeca80f5767c
 
 game = Game()
 UI = BiscaGameUI()
