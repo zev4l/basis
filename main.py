@@ -1,8 +1,8 @@
 from engine.game import Game
-from engine.players import Human, RandomAgent, SimpleGreedAgent
+from engine.players import Human, RandomAgent, SimpleGreedyAgent
 
 player1 = RandomAgent("Player 1")
-player2 = SimpleGreedAgent("Player 2")
+player2 = SimpleGreedyAgent("Player 2")
 
 game = Game()
 game.add_player(player1)
