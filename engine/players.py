@@ -101,7 +101,6 @@ class Human(Player):
 
 # AGENTS
 
-
 class RandomAgent(Player):
     """
     An agent which randomly picks a card from its deck at any given play

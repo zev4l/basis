@@ -45,16 +45,16 @@ class Rank(IntEnum):
     Allows comparing ranks between the real rank, and obtaining points via the points property (e.g. Rank.Ace.points -> 11)
     """
 
-    Ace = (10, 11)
-    Seven = (9, 10)
-    King = (8, 4)
-    Jack = (7, 3)
-    Queen = (6, 2)
-    Six = (5, 0)
-    Five = (4, 0)
-    Four = (3, 0)
-    Three = (2, 0)
-    Two = (1, 0)
+    ACE = (10, 11)
+    SEVEN = (9, 10)
+    KING = (8, 4)
+    JACK = (7, 3)
+    QUEEN = (6, 2)
+    SIX = (5, 0)
+    FIVE = (4, 0)
+    FOUR = (3, 0)
+    THREE = (2, 0)
+    TWO = (1, 0)
 
     def __new__(cls, value, points):
         obj = int.__new__(cls, value)
@@ -83,6 +83,9 @@ class Card:
         self.rank = rank
         self.suit = suit
         self.points = rank.points
+
+    def __hash__(self) -> int:
+        return hash((self.rank, self.suit))
 
     def __eq__(self, other):
         return self.rank == other.rank and self.suit == other.suit
