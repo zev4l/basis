@@ -35,18 +35,26 @@ class Pool:
 
 class Rank(IntEnum):
     """
-    A helper enum for card ranks
+    A helper enum for card ranks.
+    Structure: (rank, points)
+    Allows comparing ranks between the real rank, and obtaining points via the points property (e.g. Rank.Ace.points -> 11)
     """
-    Two = 0
-    Three = 0
-    Four = 0
-    Five = 0
-    Six = 0
-    Seven = 0
-    Queen = 2
-    Jack = 3
-    King = 4
-    Ace = 11
+    Ace = (10, 11)
+    Seven = (9, 10)
+    King = (8, 4)
+    Jack = (7, 3)
+    Queen = (6, 2)
+    Six = (5, 0)
+    Five = (4, 0)
+    Four = (3, 0)
+    Three = (2, 0)
+    Two = (1, 0)
+
+    def __new__(cls, value, points):
+        obj = int.__new__(cls, value)
+        obj._value_ = value
+        obj.points = points
+        return obj
 
 class Suit(Enum):
     """
@@ -64,6 +72,7 @@ class Card:
     def __init__(self, rank : Rank, suit : Suit):
         self.rank = rank
         self.suit = suit
+        self.points = rank.points
 
     def __eq__(self, other):
         return self.rank == other.rank and self.suit == other.suit
@@ -110,3 +119,10 @@ class Deck:
             
     def __len__(self):
         return len(self.cards)
+    
+
+class State(Enum):
+    RUNNING = 1
+    EXPECTING_INPUT = 2
+    OVER = 3
+    DRAW = 4

@@ -1,5 +1,5 @@
 from engine.players import Player
-from engine.structures import Pool, Deck, Suit, Rank, Card
+from engine.structures import Pool, Deck, Suit, Card, State
 from utils.stats import StatsRecorder
 from utils.log import Logger
 from time import sleep
@@ -7,7 +7,7 @@ from time import sleep
 # Constants
 MIN_PLAYERS = 2
 CARDS_PER_PLAYER = 3
-ROUND_DELAY_SECONDS = 1
+ROUND_DELAY_SECONDS = 0.5
 
 log = Logger()
 
@@ -58,7 +58,11 @@ class Trick:
         return winner, winning_card
 
 class Game:
+    """
+    Houses main game logic, including tricks and winning logic.
+    """
     def __init__(self, stats_recorder : StatsRecorder = None):
+        self.state = State.RUNNING
         self.tricks = []
         self.current_trick = None
         self.deck = Deck() # The deck is shuffled at instantiation
@@ -67,6 +71,7 @@ class Game:
         self.trump_suit : Suit
         self.trump_card : Card
         self.stats_recorder = stats_recorder # To be incremented mid-game
+        self.winner = None
 
         log.info("New game instantiated")
 
@@ -106,7 +111,7 @@ class Game:
                 elif self.trump_card:
                     # TODO: Review this logic
                     player.add_to_hand(self.trump_card)
-                    log.debug(f"Dealt trump card {card} to {player.name}")
+                    log.debug(f"Dealt trump card {self.trump_card} to {player.name}")
                     self.trump_card = None
         
     def turn(self) -> Card:
@@ -121,52 +126,89 @@ class Game:
         return player, card_played
 
     def next_round(self):
-        log.info(f"Starting trick number {len(self.tricks) + 1}")
 
-        for player in self.player_pool.get_players():
-            log.debug(f"{player.get_name()}'s hand: {player.get_hand()}")
+        if (self.state == State.RUNNING):
 
-        # Setup new round
-        self.current_trick = Trick()
+            log.info(f"Starting trick number {len(self.tricks) + 1}")
+
+            for player in self.player_pool.get_players():
+                log.debug(f"{player.get_name()}'s hand: {player.get_hand()}")
+
+            # Setup new round
+            self.current_trick = Trick()
+            
+            # Set first player
+            self.player_pool.set_current_player(self.first_player) 
+            
+            # Draw first card, and setting its suit as the round's suit
+            _, first_card = self.turn()
+            self.current_trick.set_starting_suit(first_card.suit)
+            self.current_trick.add_play(self.first_player, first_card)
+            log.info(f"{self.first_player} played {first_card}")
+            
+            # Advance to next player
+            self.player_pool.advance_player()            
+
+            # Execute turns for all other players    
+            for _ in range(len(self.player_pool) - 1):
+                # TODO: Proof this, because a hand no longer have cards to continue (e.g. num players % 40 != 0)
+
+                # Delay for readability
+                sleep(ROUND_DELAY_SECONDS)
+
+                # Adding current play to trick
+                player, card_played = self.turn()
+                self.current_trick.add_play(player, card_played)
+                log.info(f"{player.name} played {card_played}")
+            
+                self.player_pool.advance_player()
+
+            self.tricks.append(self.current_trick)
+
+            # Calculating winner, saving trick and setting next-round first player
+            winner, winning_card = self.current_trick.calc_winner(self.trump_suit)
+            log.info(f"Round winner is {winner.name} with {winning_card}")
+
+            self.first_player = winner
+            winner.add_to_pile(self.current_trick.get_cards())
+            log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
+
+            # Topping up player hands
+            self.deal_cards(1)
+
+            self.check_game_end()
+    
+    def check_game_end(self):
+        # TODO: Ideally stat manager should collect stats during next_round. There may also be interest in collecting them here
         
-        # Set first player
-        self.player_pool.set_current_player(self.first_player) 
+        if len(self.deck) == 0:    
+            # Asserting game winner
+            points_per_winner = {}
+
+            for player in self.player_pool.players:
+                points_per_winner[player] = sum([card.points for card in player.pile])
+
+            # Checking for any two players with the same score, i.e., if there are non-unique points
+            if len(set(points_per_winner.values())) != len(points_per_winner.values()):
+                self.state = State.DRAW
+
+                # In this case, winner is a tuple of the winners
+                self.winner = tuple([player for player, points in points_per_winner.items() if points == max(points_per_winner.values())])
+
+                log.info(f"Game ended in a draw between {self.winner}")
+
+            else:
+                self.state = State.OVER
+                self.winner = max(points_per_winner, key=points_per_winner.get)
+                log.info(f"Game ended. Winner is {self.winner} with {points_per_winner[self.winner]} points")
+                
+            # Log a table of points per player
+            log.debug("Points per player:")
+            for player, points in points_per_winner.items():
+                log.debug(f"{player.name}: {points}")
         
-        # Draw first card, and setting its suit as the round's suit
-        _, first_card = self.turn()
-        self.current_trick.set_starting_suit(first_card.suit)
-        self.current_trick.add_play(self.first_player, first_card)
-        log.info(f"{self.first_player} played {first_card}")
-        
-        # Advance to next player
-        self.player_pool.advance_player()            
-
-        # Execute turns for all other players    
-        for _ in range(len(self.player_pool) - 1):
-            # Delay for readability
-            sleep(ROUND_DELAY_SECONDS)
-
-            # Adding current play to trick
-            player, card_played = self.turn()
-            self.current_trick.add_play(player, card_played)
-            log.info(f"{player.name} played {card_played}")
-        
-            self.player_pool.advance_player()
-
-        self.tricks.append(self.current_trick)
-
-        # Calculating winner, saving trick and setting next-round first player
-        winner, winning_card = self.current_trick.calc_winner(self.trump_suit)
-        log.info(f"Round winner is {winner.name} with {winning_card}")
-
-        self.first_player = winner
-        winner.add_to_pile(self.current_trick.get_cards())
-        log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
-
-        # Topping up player hands
-        self.deal_cards(1)
-
-        # TODO: Define end-of-game logic/conditions
+    def is_over(self):
+        return self.state == State.OVER
 
     def __str__(self):
         print('=====================================================')

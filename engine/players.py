@@ -1,13 +1,14 @@
-from engine.structures import Card, Rank, Suit
+from engine.structures import Card, Suit
 from abc import abstractmethod
 from random import choice
 
 
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, player_type):
         self.name = name
         self.hand = []
         self.pile = []
+        self.type = player_type
         
     def get_hand(self):
         return self.hand
@@ -49,7 +50,7 @@ class Player:
             valid_hand = []
 
             for card in self.hand:
-                 if card.suit == current_suit or card.suit == trump:
+                if card.suit == current_suit or card.suit == trump:
                     valid_hand.append(card)
         
             if len(valid_hand) > 0:
@@ -72,11 +73,13 @@ class Human(Player):
     Represents a human player
     """
     def __init__(self, name):
-        Player.__init__(self, name)
+        name = input("What's your name?")
+        super.__init__(self, name, "Human")
+
     
-    def action(self, state) -> Card: 
+    def action(self, world) -> Card: 
         # Show the user the current game-state
-        state.print()
+        world.print()
 
         # Show the user his hand
         self.print_hand()
@@ -100,7 +103,7 @@ class RandomAgent(Player):
     An agent which randomly picks a card from its deck at any given play
     """
     def __init__(self, name):
-        Player.__init__(self, name)
+        super().__init__(name, "RandomAgent")
 
     def action(self, world) -> Card:
         
@@ -119,7 +122,7 @@ class SimpleGreedyAgent(Player):
     if more than one card have the same rank  it will randomly pick
     """
     def __init__(self, name):
-        Player.__init__(self, name)
+        super().__init__(name, "SimpleGreedyAgent")
         
     def highest_card(self, hand : Card)->Card:
         
@@ -148,13 +151,13 @@ class SimpleGreedyAgent(Player):
     
 class MinimizePointLossGreedyAgent(Player):
     """
-    this Agent will always play the card that wont loose him points 
+    this Agent will always play the card that wont lose him points 
     will also jump at the bit to make points 
     when in first place to play will play highest card
     
     """
     def __init__(self, name):
-        Player.__init__(self, name)
+        super().__init__(name, "MinimizePointLossGreedyAgent")
         
     def action(self, world)-> Card:
         
