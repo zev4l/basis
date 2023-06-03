@@ -9,13 +9,13 @@ class Player:
         self.hand = []
         self.pile = []
         self.type = player_type
-        
+
     def get_hand(self):
         return self.hand
 
     def get_name(self):
         return self.name
-    
+
     def get_pile(self):
         return self.pile
 
@@ -33,26 +33,26 @@ class Player:
         pass
         # card = self.agent.Action(self,world,isFirst)
         # return self.play(card.rank,  card.suit)
-        
-    def play(self, played_card : Card) -> Card:
+
+    def play(self, played_card: Card) -> Card:
         for card in self.hand:
             if card.rank == played_card.rank and card.suit == played_card.suit:
                 self.hand.remove(card)
                 return card
         return False
-    
-    def playable_cards(self, world):
-        current_suit  =  world.current_trick.get_starting_suit()
 
-        if (current_suit):
+    def playable_cards(self, world):
+        current_suit = world.current_trick.get_starting_suit()
+
+        if current_suit:
             trump = world.trump_suit
-        
+
             valid_hand = []
 
             for card in self.hand:
                 if card.suit == current_suit or card.suit == trump:
                     valid_hand.append(card)
-        
+
             if len(valid_hand) > 0:
                 return valid_hand
 
@@ -60,115 +60,113 @@ class Player:
 
     def display_hand(self):
         print(f"{self.name}'s hand:")
-        hand = '||'
-        for card in self.hand: 
-            hand =  f'{hand} {card.simple_print()} |'
-        print( f'{hand}|')
+        hand = "||"
+        for card in self.hand:
+            hand = f"{hand} {card.simple_print()} |"
+        print(f"{hand}|")
 
     def __str__(self):
         return self.name
 
-class Human(Player): 
+
+class Human(Player):
     """
     Represents a human player
     """
+
     def __init__(self, name):
         super().__init__(name, "Human")
 
-    
-    def action(self, world) -> Card: 
+    def action(self, world) -> Card:
         # Collect user's card-choice, accounting for print_hand's 0-index change
         card_idx = int(input("Choose your card: ")) - 1
         card = self.hand[card_idx]
 
         return card
 
+
 # AGENTS
+
 
 class RandomAgent(Player):
     """
     An agent which randomly picks a card from its deck at any given play
     """
+
     def __init__(self, name):
         super().__init__(name, "RandomAgent")
 
     def action(self, world) -> Card:
-        
         play_cards = self.playable_cards(world)
 
         print(self)
-        print (play_cards)
-
+        print(play_cards)
 
         return choice(play_cards)
-    
-    
+
+
 class SimpleGreedyAgent(Player):
     """
     this Agent will always play the highest valued card possible
     if more than one card have the same rank  it will randomly pick
     """
+
     def __init__(self, name):
         super().__init__(name, "SimpleGreedyAgent")
-        
-    def highest_card(self, hand : Card)->Card:
-        
-        high_card =  hand[0]
+
+    def highest_card(self, hand: Card) -> Card:
+        high_card = hand[0]
 
         top_cards = []
 
-        for card in hand : 
-            if (card.rank > high_card.rank):
-                high_card =card
-        
-        for card in hand : 
-            if (card.rank ==  high_card.rank):
+        for card in hand:
+            if card.rank > high_card.rank:
+                high_card = card
+
+        for card in hand:
+            if card.rank == high_card.rank:
                 top_cards.append(card)
-        
+
         return top_cards
 
     def action(self, world) -> Card:
-        
         play_cards = self.playable_cards(world)
 
         print(self)
-        print (play_cards)
-        
-        return choice(self.highest_card(play_cards) )
-    
+        print(play_cards)
+
+        return choice(self.highest_card(play_cards))
+
+
 class MinimizePointLossGreedyAgent(Player):
     """
-    this Agent will always play the card that wont lose him points 
-    will also jump at the bit to make points 
+    this Agent will always play the card that wont lose him points
+    will also jump at the bit to make points
     when in first place to play will play highest card
-    
+
     """
+
     def __init__(self, name):
         super().__init__(name, "MinimizePointLossGreedyAgent")
-        
-    def action(self, world)-> Card:
-        
+
+    def action(self, world) -> Card:
         play_cards = self.playable_cards(world)
         print(self)
-        print (play_cards)
-        
-        
-           
-        return  choice(play_cards) 
-    
-    def card_choice(self, hand : Card ,table )-> Card:
-        
-        #check what is the card  
-        #1st play  :  play highest card 
-        # check all cards in table and decide winner and if trump 
-        
-        #compare winner to our hand (NOT TRUMP)
-        # if no card beats it choose lowest weight card non trump 
-        # if card beats(same suit higher rank,  or trump) it choose highest card 
-        
-        #compare winner to our hand (TRUMP)
+        print(play_cards)
+
+        return choice(play_cards)
+
+    def card_choice(self, hand: Card, table) -> Card:
+        # check what is the card
+        # 1st play  :  play highest card
+        # check all cards in table and decide winner and if trump
+
+        # compare winner to our hand (NOT TRUMP)
+        # if no card beats it choose lowest weight card non trump
+        # if card beats(same suit higher rank,  or trump) it choose highest card
+
+        # compare winner to our hand (TRUMP)
         # if no card beats it choose lowest card non trump
-        # if card beats it choose highest beating card 
-        
-        
+        # if card beats it choose highest beating card
+
         return hand
