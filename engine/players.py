@@ -59,6 +59,9 @@ class Player:
 
         return valid_hand
 
+    def get_points(self):
+        return sum([card.points for card in self.pile])
+
     def display_hand(self):
         print(f"{self.name}'s hand:")
         hand = "||"
@@ -80,7 +83,7 @@ class Human(Player):
         self.input = None
     
     def action(self, world) -> Card: 
-        # Await input population
+        # Await input population. This will block the entire game engine until self.input is set, likely by the GUI
         while not self.input:
             pass
 
