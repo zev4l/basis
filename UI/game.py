@@ -231,8 +231,9 @@ class BiscaGameUI:
             self.screen.blit(top_deck_card_graphics.back_graphics.surface, self.deck_position)
 
         # # Draw trump card
-        trump_card_graphics = self.card_representations[self.game.trump_card]
-        self.screen.blit(trump_card_graphics.graphics.surface, self.trump_position)
+        if self.game.trump_card:
+            trump_card_graphics = self.card_representations[self.game.trump_card]
+            self.screen.blit(trump_card_graphics.graphics.surface, self.trump_position)
 
         # if self.game_over != True:
         #     # Draw current player text
