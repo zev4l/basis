@@ -7,7 +7,7 @@ from time import sleep
 # Constants
 MIN_PLAYERS = 2
 CARDS_PER_PLAYER = 3
-ROUND_DELAY_SECONDS = 2.5
+ROUND_DELAY_SECONDS = 3
 
 log = Logger()
 

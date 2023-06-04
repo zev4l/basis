@@ -115,6 +115,7 @@ class BiscaGameUI:
 
         self.cardbuttons = []
 
+        self.game.player_pool.register_callback(self.drawCurrentStatus)
         self.game.start_match()
         self.startGame()
 
@@ -185,64 +186,68 @@ class BiscaGameUI:
                 for button in self.cardbuttons:
                     button.handle_event(event)
 
-            played_cards = []
-            if self.game.current_trick != None:
-                played_cards = self.game.current_trick.get_cards()
-            for playernr in range(len(self.game.player_pool.get_players())):
-                player = self.game.player_pool.get_players()[playernr]
-                for cardnr in range(len(player.get_hand())):
-                    card = player.get_hand()[cardnr]
-                    cardUI = self.card_representations[card]
-                    if card not in played_cards:
-                        cardUI.graphics.position = self.hand_positions[playernr][cardnr]
-                    if card in played_cards:
-                        cardUI.graphics.position = (self.hand_positions[playernr][cardnr][0], self.hand_positions[playernr][cardnr][1] - 25)  # Move the card up by 50 pixels
-                    cardUI.button = Button(cardUI.graphics.position[0], cardUI.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=card: self.handle_card_click(c))
-                    self.cardbuttons.append(cardUI.button)
-                    self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
-
-                    # Draw player label
-                    font = pygame.font.Font(None, 22)
-                    label = font.render(player.name, True, pygame.Color("white"))
-                    label_rect = label.get_rect(center=(self.player_positions[playernr][0] + 125, self.player_positions[playernr][1] + 140))
-                    self.screen.blit(label, label_rect)
-
-                    # Draw player score
-                    score_label = font.render(f"Score: {sum([card.points for card in player.pile])} points", True, pygame.Color("white"))
-                    score_rect = score_label.get_rect(center=(self.player_positions[playernr][0] + 125, self.player_positions[playernr][1] + 160))
-                    self.screen.blit(score_label, score_rect)
-
-            # # Draw deck
-            if len(self.game.deck.cards) > 0:
-                top_deck_card = self.game.deck.cards[-1]
-                top_deck_card_graphics = self.card_representations[top_deck_card]
-                self.screen.blit(top_deck_card_graphics.back_graphics.surface, self.deck_position)
-
-            # # Draw trump card
-            trump_card_graphics = self.card_representations[self.game.trump_card]
-            self.screen.blit(trump_card_graphics.graphics.surface, self.trump_position)
-
-            # if self.game_over != True:
-            #     # Draw current player text
-            #     current_player_label = font.render(f"Player {self.current_player + 1} is playing", True, pygame.Color("white"))
-            #     current_player_rect = current_player_label.get_rect(center=(self.width // 2, self.height - 300))
-            #     self.screen.blit(current_player_label, current_player_rect)
-
-            #     # Draw player takes hand text
-            #     player_takes_hand_label = font.render(self.player_takes_hand_text, True, pygame.Color("white"))
-            #     player_takes_hand_rect = player_takes_hand_label.get_rect(center=(self.width // 2, self.height - 275))
-            #     self.screen.blit(player_takes_hand_label, player_takes_hand_rect)
-
-            # # Draw Play Again Button
-            # if self.game_over == True:
-            #     self.play_again_button.draw(self.screen)
-
-            pygame.display.flip()
-
-            # Limit the frame rate
-            sleep(0.1)
+            self.drawCurrentStatus()
 
             self.game.next_round()
+
+    def drawCurrentStatus(self, new_player=None):
+        self.screen.fill((0, 100, 0))
+        played_cards = []
+        if self.game.current_trick != None:
+            played_cards = self.game.current_trick.get_cards()
+        for playernr in range(len(self.game.player_pool.get_players())):
+            player = self.game.player_pool.get_players()[playernr]
+            for cardnr in range(len(player.get_hand())):
+                card = player.get_hand()[cardnr]
+                cardUI = self.card_representations[card]
+                if card not in played_cards:
+                    cardUI.graphics.position = self.hand_positions[playernr][cardnr]
+                else:
+                    cardUI.graphics.position = (self.hand_positions[playernr][cardnr][0], self.hand_positions[playernr][cardnr][1] - 25)  # Move the card up by 50 pixels
+                cardUI.button = Button(cardUI.graphics.position[0], cardUI.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=card: self.handle_card_click(c))
+                self.cardbuttons.append(cardUI.button)
+                self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
+
+            # Draw player label
+            font = pygame.font.Font(None, 22)
+            label = font.render(player.name, True, pygame.Color("white"))
+            label_rect = label.get_rect(center=(self.player_positions[playernr][0] + 125, self.player_positions[playernr][1] + 140))
+            self.screen.blit(label, label_rect)
+
+            # Draw player score
+            score_label = font.render(f"Score: {sum([card.points for card in player.pile])} points", True, pygame.Color("white"))
+            score_rect = score_label.get_rect(center=(self.player_positions[playernr][0] + 125, self.player_positions[playernr][1] + 160))
+            self.screen.blit(score_label, score_rect)
+
+        # # Draw deck
+        if len(self.game.deck.cards) > 0:
+            top_deck_card = self.game.deck.cards[-1]
+            top_deck_card_graphics = self.card_representations[top_deck_card]
+            self.screen.blit(top_deck_card_graphics.back_graphics.surface, self.deck_position)
+
+        # # Draw trump card
+        trump_card_graphics = self.card_representations[self.game.trump_card]
+        self.screen.blit(trump_card_graphics.graphics.surface, self.trump_position)
+
+        # if self.game_over != True:
+        #     # Draw current player text
+        #     current_player_label = font.render(f"Player {self.current_player + 1} is playing", True, pygame.Color("white"))
+        #     current_player_rect = current_player_label.get_rect(center=(self.width // 2, self.height - 300))
+        #     self.screen.blit(current_player_label, current_player_rect)
+
+        #     # Draw player takes hand text
+        #     player_takes_hand_label = font.render(self.player_takes_hand_text, True, pygame.Color("white"))
+        #     player_takes_hand_rect = player_takes_hand_label.get_rect(center=(self.width // 2, self.height - 275))
+        #     self.screen.blit(player_takes_hand_label, player_takes_hand_rect)
+
+        # # Draw Play Again Button
+        # if self.game_over == True:
+        #     self.play_again_button.draw(self.screen)
+
+        pygame.display.flip()
+
+        # Limit the frame rate
+        sleep(0.1)
 
     def endInit(self):
         if sum(self.agent_count.values()) > 0:
