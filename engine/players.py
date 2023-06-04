@@ -80,7 +80,7 @@ class Human(Player):
         self.input = None
     
     def action(self, world) -> Card: 
-        # Await input population
+        # Await input population. This will block the entire game engine until self.input is set, likely by the GUI
         while not self.input:
             pass
 
