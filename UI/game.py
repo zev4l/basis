@@ -38,7 +38,6 @@ class BiscaGameUI:
         # self.current_player = 0
         # self.player_scores = [0 for x in range(self.num_players)]
         # self.player_takes_hand = 0
-        # self.player_takes_hand_text = ""
         # self.hands = [BiscaDeck[i * 3: (i + 1) * 3] for i in range(self.num_players)]
         # self.trump = BiscaDeck[-2]
         # self.deck = [card for card in BiscaDeck if card not in self.hands[self.current_player] and card != self.trump]
@@ -53,6 +52,7 @@ class BiscaGameUI:
         # Keep active buttons
         self.buttons = []
         self.play_again_button = Button(400, 500, 200, 50, "Play Again", self.play_again)
+        self.player_takes_hand_text = ""
 
         # -----------------------------------------------------
         # ---------------------- Game -------------------------
@@ -192,6 +192,8 @@ class BiscaGameUI:
 
             self.drawCurrentStatus()
 
+            if len(self.game.tricks) > 0: 
+                self.show_player_takes_hand(self.game.tricks[-1].get_winner())
             self.game.next_round()
             self.trick_hands = [copy.deepcopy(player.get_hand()) for player in self.game.player_pool.players]
 
@@ -235,25 +237,25 @@ class BiscaGameUI:
             trump_card_graphics = self.card_representations[self.game.trump_card]
             self.screen.blit(trump_card_graphics.graphics.surface, self.trump_position)
 
-        # if self.game_over != True:
-        #     # Draw current player text
-        #     current_player_label = font.render(f"Player {self.current_player + 1} is playing", True, pygame.Color("white"))
-        #     current_player_rect = current_player_label.get_rect(center=(self.width // 2, self.height - 300))
-        #     self.screen.blit(current_player_label, current_player_rect)
+        # Draw current player text
+        current_player_label = font.render(f"{self.game.player_pool.get_current_player()} is playing", True, pygame.Color("white"))
+        current_player_rect = current_player_label.get_rect(center=(self.width // 2, self.height - 300))
+        self.screen.blit(current_player_label, current_player_rect)
 
-        #     # Draw player takes hand text
-        #     player_takes_hand_label = font.render(self.player_takes_hand_text, True, pygame.Color("white"))
-        #     player_takes_hand_rect = player_takes_hand_label.get_rect(center=(self.width // 2, self.height - 275))
-        #     self.screen.blit(player_takes_hand_label, player_takes_hand_rect)
-
-        # # Draw Play Again Button
-        # if self.game_over == True:
-        #     self.play_again_button.draw(self.screen)
+        # Draw player takes hand text
+        player_takes_hand_label = font.render(self.player_takes_hand_text, True, pygame.Color("white"))
+        player_takes_hand_rect = player_takes_hand_label.get_rect(center=(self.width // 2, self.height - 275))
+        self.screen.blit(player_takes_hand_label, player_takes_hand_rect)
 
         pygame.display.flip()
 
         # Limit the frame rate
         sleep(0.1)
+
+    def drawEndScreen(self):
+        while self.game.state == State.OVER:
+            self.screen.fill((0, 100, 0))
+            self.play_again_button.draw(self.screen)
 
     def endInit(self):
         if sum(self.agent_count.values()) > 0:
