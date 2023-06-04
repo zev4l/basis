@@ -103,6 +103,9 @@ class Game:
         # Set first player
         self.set_first_player(self.player_pool.get_players()[0])
 
+        # Set state to RUNNING
+        self.state = State.RUNNING
+
     def deal_cards(self, num_cards):
         for _ in range(num_cards):
             for player in self.player_pool.get_players():
@@ -184,7 +187,8 @@ class Game:
     def check_game_end(self):
         # TODO: Ideally stat manager should collect stats during next_round. There may also be interest in collecting them here
         
-        if len(self.deck) == 0:    
+        # If the deck is empty and players have no more cards
+        if len(self.deck) == 0 and all([len(player.hand) == 0 for player in self.player_pool.players]):
             # Asserting game winner
             points_per_winner = {}
 

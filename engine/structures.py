@@ -4,19 +4,21 @@ from enum import Enum, IntEnum
 
 class Pool:
     """
-    Structure to be used by Game, which represents an aggregation of players
+    Structure to be used by Game, which represents an aggregation of players.
+    The implementation of this class allows a third party to register on-player-change callbacks.
     """
 
     def __init__(self):
         self.players = []
         self.current_player_index = 0
+        self.callbacks = []
 
     def add_player(self, player):
         self.players.append(player)
 
     def get_players(self):
         return self.players
-
+    
     def get_current_player(self):
         if self.players:
             return self.players[self.current_player_index]
@@ -24,12 +26,17 @@ class Pool:
 
     def set_current_player(self, player):
         self.current_player_index = self.players.index(player)
+        self._notify_observers()
 
     def advance_player(self):
-        if self.players:
-            self.current_player_index = (self.current_player_index + 1) % len(
-                self.players
-            )
+        self.set_current_player(self.players[(self.current_player_index + 1) % len(self.players)])
+
+    def _notify_observers(self):
+        for callback in self.callbacks:
+            callback(self.get_current_player())
+
+    def register_callback(self, callback):
+        self.callbacks.append(callback)
 
     def __str__(self):
         return ", ".join([player.name for player in self.players])
