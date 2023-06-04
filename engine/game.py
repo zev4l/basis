@@ -147,6 +147,9 @@ class Game:
             self.player_pool.set_current_player(self.first_player) 
             
             # Draw first card, and setting its suit as the round's suit
+            # Delay for readability
+            sleep(ROUND_DELAY_SECONDS)
+
             _, first_card = self.turn()
             self.current_trick.set_starting_suit(first_card.suit)
             self.current_trick.add_play(self.first_player, first_card)
