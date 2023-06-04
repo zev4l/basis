@@ -4,6 +4,12 @@ from pygame_cards.abstract import AbstractCard
 from dataclasses import dataclass
 from enum import Enum
 
+import os, sys
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+from engine.structures import Card
+
 class CardSuit(Enum):
     HEARTS = 'hearts'
     SPADES = 'spades'
@@ -23,9 +29,8 @@ class CardRank(Enum):
     ACE = 'A'
 
 @dataclass
-class Card(AbstractCard):
+class UICard(AbstractCard):
     rank: CardRank
     suit: CardSuit
-    value: int
-    points: int
+    filename: str
 

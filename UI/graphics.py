@@ -7,20 +7,19 @@ import pygame
 from pygame_cards.abstract import AbstractCardGraphics
 from pygame_cards.back import CardBackGraphics
 
-from card import Card, CardRank, CardSuit
-from deck import BiscaDeck
+from card import UICard, CardRank, CardSuit
 
 @dataclass
 class CardGraphics(AbstractCardGraphics):
 
        # Specify the type of card that this graphics accept
-       card: Card
+       card: UICard
 
        # This will be the file where the character is
        filepath: Path = None
 
        def __post_init__(self):
-              self.filepath = "deck-gui/cards/" + str(self.card.suit.value) + "-" + str(self.card.rank.value) + ".png"
+              self.filepath = "UI/deck-gui/cards/" + str(self.card.filename)
 
        @cached_property
        def surface(self) -> pygame.Surface:
@@ -43,10 +42,10 @@ class CardGraphics(AbstractCardGraphics):
 class CardBackGraphics(CardBackGraphics):
 
        # Specify the type of card that this graphics accept
-       card: Card
+       card: UICard
 
        # This will be the file where the character is
-       filepath: Path = "deck-gui/cards-back.png"    
+       filepath: Path = "UI/deck-gui/cards-back.png"    
 
        @cached_property
        def surface(self) -> pygame.Surface:
