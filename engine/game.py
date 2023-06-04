@@ -182,6 +182,9 @@ class Game:
             winner.add_to_pile(self.current_trick.get_cards())
             log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
 
+            # Delay for readability
+            sleep(ROUND_DELAY_SECONDS)
+
             # Topping up player hands
             self.deal_cards(1)
 
