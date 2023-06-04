@@ -186,7 +186,6 @@ class BiscaGameUI:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
-                self.play_again_button.handle_event(event)
                 for button in self.cardbuttons:
                     button.handle_event(event)
 
@@ -194,8 +193,11 @@ class BiscaGameUI:
 
             if len(self.game.tricks) > 0: 
                 self.show_player_takes_hand(self.game.tricks[-1].get_winner())
+            
             self.game.next_round()
             self.trick_hands = [copy.deepcopy(player.get_hand()) for player in self.game.player_pool.players]
+
+        self.drawEndScreen()
 
     def drawCurrentStatus(self, new_player=None):
         self.screen.fill((0, 100, 0))
@@ -253,12 +255,35 @@ class BiscaGameUI:
         sleep(0.1)
 
     def drawEndScreen(self):
+        self.buttons = [self.play_again_button]
+
         while self.game.state == State.OVER:
             self.screen.fill((0, 100, 0))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                self.play_again_button.handle_event(event)
+
+            # Render and display the agent text
+            self.drawText(f"Game Over", 500, 200, size=45)
+            self.drawText(f"Winner is {self.game.winner.name} with {sum([card.points for card in self.game.winner.pile])} points", 500, 250)
+
+            self.drawText(f"Points per player", 500, 300)
+
+            for playernr in range(len(self.game.player_pool.players)):
+                player = self.game.player_pool.players[playernr]
+                self.drawText(f"{player.name}: {sum([card.points for card in player.pile])}", 500, 330 + 30*playernr)
+
             self.play_again_button.draw(self.screen)
+            
+            pygame.display.flip()
+
+            # Limit the frame rate
+            sleep(0.1)
 
     def endInit(self):
-        if sum(self.agent_count.values()) > 0:
+        if sum(self.agent_count.values()) > 1:
             self.buttons = []
             self.game.state = State.RUNNING
 
@@ -284,7 +309,8 @@ class BiscaGameUI:
 
     # Define Play Again Button
     def play_again(self):
-        self.start_game()
+        print("here")
+        BiscaGameUI()
     
     def isTableFull(self):
         return all(value is not None for value in self.table.values())
@@ -386,14 +412,11 @@ class BiscaGameUI:
                     self.no_more_cards = True
             
     def show_player_takes_hand(self, player):
-        self.player_takes_hand_text = "Player "+str(player+1)+" takes trick"
-        timer = threading.Timer(3, self.reset_player_takes_hand)
+        self.player_takes_hand_text = player.name+" takes trick"
+        timer = threading.Timer(2, self.reset_player_takes_hand)
         timer.start()
 
     def reset_player_takes_hand(self):
         self.player_takes_hand_text = ""
-        
-
-
 
 BiscaGameUI()
