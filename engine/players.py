@@ -79,7 +79,7 @@ class Human(Player):
     """
 
     def __init__(self, name):
-        super().__init__(self, name, "Human")
+        super().__init__(name, "Human")
         self.input = None
     
     def action(self, world) -> Card: 

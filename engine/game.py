@@ -89,6 +89,10 @@ class Game:
             log.error("Not enough players to start a match")
             raise Exception("Not enough players to start a match")
         
+        if len(self.player_pool) == 3 or len(self.player_pool) == 6:
+            self.deck.rectify()
+            log.debug(f"Rectifying deck as a {len(self.player_pool)}-player situation has been encountered.")
+
         log.info("Starting match")
         
         # Drawing trump card
