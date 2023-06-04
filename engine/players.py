@@ -59,6 +59,9 @@ class Player:
 
         return valid_hand
 
+    def get_points(self):
+        return sum([card.points for card in self.pile])
+
     def display_hand(self):
         print(f"{self.name}'s hand:")
         hand = "||"

@@ -76,6 +76,9 @@ class Game:
         log.info("New game instantiated")
 
     def add_player(self, player : Player):
+        # Reset player's hand and pile
+        player.hand = []
+        player.pile = []
         self.player_pool.add_player(player)
 
     def set_first_player(self, player):
