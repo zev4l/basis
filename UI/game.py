@@ -115,6 +115,8 @@ class BiscaGameUI:
 
         self.cardbuttons = []
 
+        self.trick_hands = []
+
         self.game.player_pool.register_callback(self.drawCurrentStatus)
         self.game.start_match()
         self.startGame()
@@ -175,6 +177,8 @@ class BiscaGameUI:
         return self.agent_count
     
     def startGame(self):
+        self.trick_hands = [copy.deepcopy(player.get_hand()) for player in self.game.player_pool.players]
+
         # Main game loop
         while not self.game.is_over():
             self.screen.fill((0, 100, 0))
@@ -189,6 +193,7 @@ class BiscaGameUI:
             self.drawCurrentStatus()
 
             self.game.next_round()
+            self.trick_hands = [copy.deepcopy(player.get_hand()) for player in self.game.player_pool.players]
 
     def drawCurrentStatus(self, new_player=None):
         self.screen.fill((0, 100, 0))
@@ -197,8 +202,8 @@ class BiscaGameUI:
             played_cards = self.game.current_trick.get_cards()
         for playernr in range(len(self.game.player_pool.get_players())):
             player = self.game.player_pool.get_players()[playernr]
-            for cardnr in range(len(player.get_hand())):
-                card = player.get_hand()[cardnr]
+            for cardnr in range(len(self.trick_hands[playernr])):
+                card = self.trick_hands[playernr][cardnr]
                 cardUI = self.card_representations[card]
                 if card not in played_cards:
                     cardUI.graphics.position = self.hand_positions[playernr][cardnr]
