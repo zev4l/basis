@@ -27,7 +27,7 @@ class Trick:
         self.plays.append((player, card))
     
     def get_winner(self) -> Player:
-        return self.winner
+        return self.winning_play[0]
     
     def set_starting_suit(self, suit : Suit):
         self.starting_suit = suit
