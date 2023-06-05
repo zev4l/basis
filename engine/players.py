@@ -79,16 +79,14 @@ class Human(Player):
     """
 
     def __init__(self, name):
-        super().__init__(self, name, "Human")
+        super().__init__(name, "Human")
         self.input = None
+
+    def register_input_handler(self, input_handler):
+        self.input_handler = input_handler
     
     def action(self, world) -> Card: 
-        # Await input population. This will block the entire game engine until self.input is set, likely by the GUI
-        while not self.input:
-            pass
-
-        # Show the user his hand
-        self.print_hand()
+        self.input = self.input_handler()
 
         # Collect user's card-choice
         card = self.hand[self.input]

@@ -161,6 +161,13 @@ class Deck:
         for card in self.cards:
             print(card)
 
+    def rectify(self):
+        """
+        This method will adapt the deck to a situation of 3-player or 6-player game.
+        According to Bisca rules, in a 3-player game, the 2s are removed from the deck.
+        """
+        self.cards = [card for card in self.cards if card.rank != Rank.TWO]
+
     def __len__(self):
         return len(self.cards)
 
