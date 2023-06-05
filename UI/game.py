@@ -80,6 +80,8 @@ class BiscaGameUI:
         for agent in agent_count.keys():
             for playernr in range(agent_count[agent]):
                 player = agent_types[agent](f'Player {str(player_count)} ({agent})')
+                if (agent == "Human"):
+                    player.register_input_handler(self.getUserSelectedCard)
                 self.game.add_player(player)
                 player_count += 1
 
@@ -186,8 +188,6 @@ class BiscaGameUI:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
-                for button in self.cardbuttons:
-                    button.handle_event(event)
 
             self.drawCurrentStatus()
 
@@ -198,6 +198,27 @@ class BiscaGameUI:
             self.trick_hands = [copy.deepcopy(player.get_hand()) for player in self.game.player_pool.players]
 
         self.drawEndScreen()
+    
+    def getUserSelectedCard(self):
+        # This function is called by the Human agent when it needs to select a card
+        while True:
+            # Checks for all events so as not to block the UI
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    # Having each button check if it was clicked. If it was, return its own index to the game engine
+                    for button in self.cardbuttons:
+                        cardIndex = button.handle_event(event)
+                        if cardIndex != None:
+                            return cardIndex
+
+            self.drawCurrentStatus()
+
+            pygame.display.flip()
+
+            # Limit the frame rate
+            sleep(0.1)
 
     def drawCurrentStatus(self, new_player=None):
         self.screen.fill((0, 100, 0))
@@ -213,7 +234,7 @@ class BiscaGameUI:
                     cardUI.graphics.position = self.hand_positions[playernr][cardnr]
                 else:
                     cardUI.graphics.position = (self.hand_positions[playernr][cardnr][0], self.hand_positions[playernr][cardnr][1] - 25)  # Move the card up by 50 pixels
-                cardUI.button = Button(cardUI.graphics.position[0], cardUI.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=card: self.handle_card_click(c))
+                cardUI.button = Button(cardUI.graphics.position[0], cardUI.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=card: self.handleCardClick(c))
                 self.cardbuttons.append(cardUI.button)
                 self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
 
@@ -318,70 +339,13 @@ class BiscaGameUI:
     def isTableNotEmpty(self):
         return any(value is not None for value in self.table.values())
 
-
-    def handle_card_click(self, card):
+    def handleCardClick(self, card):
         if pygame.time.get_ticks() - self.last_clicked >= 500:
-            if card in self.hands[self.current_player]:
-                # forbid renuncia
-                if not self.renuncia(card):
-                    self.last_clicked = pygame.time.get_ticks()
-
-                    card.graphics.position = (card.graphics.position[0], card.graphics.position[1] - 25)  # Move the card up by 50 pixels
+            # This condition checks the card against the player's playable cards, thus avoiding illegal plays
+            if card in self.game.player_pool.get_current_player().playable_cards(self.game):       
+                self.last_clicked = pygame.time.get_ticks()
                     
-                    self.table[self.current_player] = card
-                    
-                    if not self.isTableFull():
-                        if self.current_player < self.num_players - 1:
-                            self.current_player += 1
-                        else:
-                            self.current_player = 0
-                    else: # deal with end of trick
-                        player_wins = self.end_trick()
-                        self.player_takes_hand = copy.deepcopy(player_wins)
-                        self.show_player_takes_hand(player_wins)
-
-                        trickpoints = 0
-                        for tablecard in self.table.values():
-                            trickpoints += tablecard.points
-                        self.player_scores[player_wins] += trickpoints
-
-                        empty_positions = self.remove_cards_from_hands()
-                        self.deal_cards(empty_positions)
-
-                        self.current_player = copy.deepcopy(player_wins)
-    
-    def renuncia(self, card):
-        if self.isTableNotEmpty():
-            current_suit = self.table[self.player_takes_hand].suit
-            possible_cards = []
-            for handcard in self.hands[self.current_player]:
-                if handcard.suit == current_suit:
-                    possible_cards.append(handcard)
-            if len(possible_cards) == 0:
-                return False
-            else:
-                return card not in possible_cards
-        return False
-    
-    def end_trick(self):
-        # stub
-        # define who takes the trick
-        trumpcards = []
-        for cardnum in range(self.num_players):
-            if self.table[cardnum].suit == self.trump.suit:
-                trumpcards.append((self.table[cardnum], cardnum))
-        
-        if len(trumpcards) > 0:
-            max_card = max(trumpcards, key=lambda item: item[0].value)
-            return max_card[1]
-        
-        suitecards = []
-        for cardnum in range(self.num_players):
-            if self.table[cardnum].suit == self.table[self.player_takes_hand].suit:
-                suitecards.append((self.table[cardnum], cardnum))
-        
-        max_card = max(suitecards, key=lambda item: item[0].value)
-        return max_card[1]
+                return self.trick_hands[self.game.player_pool.current_player_index].index(card)
     
     def remove_cards_from_hands(self):
         positions = []
@@ -398,7 +362,7 @@ class BiscaGameUI:
                 self.hands[playernum].append(self.deck[0])
                 dealtcard = self.hands[playernum][-1]
                 dealtcard.graphics.position = empty_positions[playernum]
-                dealtcard.button = Button(dealtcard.graphics.position[0], dealtcard.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=dealtcard: self.handle_card_click(c))
+                dealtcard.button = Button(dealtcard.graphics.position[0], dealtcard.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=dealtcard: self.handleCardClick(c))
                 self.cardbuttons.append(dealtcard.button)
                 self.deck.pop(0)
             else:
@@ -406,7 +370,7 @@ class BiscaGameUI:
                     self.hands[playernum].append(self.trump)
                     dealtcard = self.hands[playernum][-1]
                     dealtcard.graphics.position = empty_positions[playernum]
-                    dealtcard.button = Button(dealtcard.graphics.position[0], dealtcard.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=dealtcard: self.handle_card_click(c))
+                    dealtcard.button = Button(dealtcard.graphics.position[0], dealtcard.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=dealtcard: self.handleCardClick(c))
                     self.cardbuttons.append(dealtcard.button)
                 else:
                     self.no_more_cards = True
