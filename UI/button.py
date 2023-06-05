@@ -20,5 +20,5 @@ class Button:
             if event.button == 1:  # Left mouse button
                 # Checking if the user really clicked on the button
                 if self.rect.collidepoint(event.pos):
-                    # Return the action of the button, allowing it to be passed to the engine
+                    # Return the action of the button, allowing it to be passed to the engine in case of human player input
                     return self.action()

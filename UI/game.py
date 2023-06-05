@@ -234,7 +234,7 @@ class BiscaGameUI:
                     cardUI.graphics.position = self.hand_positions[playernr][cardnr]
                 else:
                     cardUI.graphics.position = (self.hand_positions[playernr][cardnr][0], self.hand_positions[playernr][cardnr][1] - 25)  # Move the card up by 50 pixels
-                cardUI.button = Button(cardUI.graphics.position[0], cardUI.graphics.position[1], CardGraphicsExtended.size[0], CardGraphicsExtended.size[1], "", lambda c=card: self.handleCardClick(c))
+                cardUI.button = Button(cardUI.graphics.position[0], cardUI.graphics.position[1], CardGraphicsExtended.size[0] - 25, CardGraphicsExtended.size[1], "", lambda c=card: self.handleCardClick(c))
                 self.cardbuttons.append(cardUI.button)
                 self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
 
