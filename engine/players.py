@@ -188,29 +188,21 @@ class MinimizePointLossGreedyAgent(Player):
         return top_cards
 
     def compare_cards(c1: Card, c2: Card, current_suit: Suit, trump: Suit):
+        # In case these are same-suit cards, compare the rank
         if c1.suit == c2.suit:
-            if c1.rank > c2.rank:
-                return 1
-            elif c2.rank > c1.rank:
-                return -1
-            else:
-                return 0
-        elif c1.suit == trump:
-            return 1
-        elif c2.suit == trump:
-            return -1
-        elif c1.suit == current_suit:
-            return 1
-        elif c2.suit == current_suit:
-            return -1
+            return 1 if c1.rank > c2.rank else -1
+        
+        # If one of the cards is a trump, it wins
+        if c1.suit == trump or c2.suit == trump:
+            return 1 if c1.suit == trump else -1
+        
+        # If one of the cards is of the current suit, it wins
+        if c1.suit == current_suit or c2.suit == current_suit:
+            return 1 if c1.suit == current_suit else -1
+        
+        # If none of the cards is of the current suit, compare the rank
+        return 1 if c1.rank > c2.rank else -1 if c1.rank < c2.rank else 0
 
-        else:
-            if c1.rank > c2.rank:
-                return 1
-            elif c1.rank < c2.rank:
-                return -1
-            else:
-                return 0
 
     def card_choice(self, hand: Card, world) -> Card:
         # check what is the card
