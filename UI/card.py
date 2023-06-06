@@ -28,6 +28,7 @@ class CardRank(Enum):
     KING = 'K'
     ACE = 'A'
 
+# UI representation of a Card object that can have graphics associated
 @dataclass
 class UICard(AbstractCard):
     rank: CardRank

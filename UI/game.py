@@ -20,6 +20,24 @@ from engine.game import Game
 from engine.players import Player, Human, RandomAgent, SimpleGreedyAgent
 from engine.structures import State
 
+SCREEN_BACKGROUND_COLOR = (0, 100, 0)
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 800
+
+CARD_WIDTH = 80
+CARD_HEIGHT = 120
+
+PLAYER_POSITION_1 = (375, 50)
+PLAYER_POSITION_2 = (725, 200)
+PLAYER_POSITION_3 = (725, 450)
+PLAYER_POSITION_4 = (375, 600)
+PLAYER_POSITION_5 = (25, 450)
+PLAYER_POSITION_6 = (25, 200)
+
+DECK_POSITION = (412, 350)
+TRUMP_POSITION = (512, 350)
+
+SPACE_BETWEEN_CARDS = 15
 
 class BiscaGameUI:
     def __init__(self):
@@ -27,9 +45,9 @@ class BiscaGameUI:
         pygame.init()
 
         # Set up the screen
-        self.size = self.width, self.height = 1000, 800
+        self.size = self.width, self.height = SCREEN_WIDTH, SCREEN_HEIGHT
         self.screen = pygame.display.set_mode(self.size)
-        self.screen.fill((0, 100, 0))  # Use dark green color
+        self.screen.fill(SCREEN_BACKGROUND_COLOR)  # Use dark green color
 
         self.last_clicked = pygame.time.get_ticks()
 
@@ -39,7 +57,7 @@ class BiscaGameUI:
         # Keep active buttons
         self.buttons = []
         self.play_again_button = Button(
-            400, 500, 200, 50, "Play Again", self.play_again
+            400, 500, 200, 50, "Play Again", self.playAgain
         )
         self.player_takes_hand_text = ""
 
@@ -68,8 +86,10 @@ class BiscaGameUI:
             agent_types[subclass.__name__] = subclass
             agent_names.append(subclass.__name__)
 
+        # Let the user select the players
         agent_count = self.showInitialScreen(agent_names)
 
+        # Register the players
         player_count = 0
         for agent in agent_count.keys():
             for playernr in range(agent_count[agent]):
@@ -85,65 +105,62 @@ class BiscaGameUI:
 
         # Define the number of players and their positions
         self.num_players = player_count
-        position1 = (375, 50)
-        position2 = (725, 200)
-        position3 = (725, 450)
-        position4 = (375, 600)
-        position5 = (25, 450)
-        position6 = (25, 200)
         if self.num_players == 2:
-            self.player_positions = [position1, position4]
+            self.player_positions = [PLAYER_POSITION_1, PLAYER_POSITION_4]
         if self.num_players == 3:
-            self.player_positions = [position1, position3, position5]
+            self.player_positions = [PLAYER_POSITION_1, PLAYER_POSITION_3, PLAYER_POSITION_5]
         if self.num_players == 4:
-            self.player_positions = [position1, position2, position4, position5]
+            self.player_positions = [PLAYER_POSITION_1, PLAYER_POSITION_2, PLAYER_POSITION_4, PLAYER_POSITION_5]
         if self.num_players == 5:
             self.player_positions = [
-                position1,
-                position2,
-                position3,
-                position4,
-                position5,
+                PLAYER_POSITION_1,
+                PLAYER_POSITION_2,
+                PLAYER_POSITION_3,
+                PLAYER_POSITION_4,
+                PLAYER_POSITION_5,
             ]
         if self.num_players == 6:
             self.player_positions = [
-                position1,
-                position2,
-                position3,
-                position4,
-                position5,
-                position6,
+                PLAYER_POSITION_1,
+                PLAYER_POSITION_2,
+                PLAYER_POSITION_3,
+                PLAYER_POSITION_4,
+                PLAYER_POSITION_5,
+                PLAYER_POSITION_6,
             ]
 
         # Set up card positions for each player
         self.hand_positions = [
-            [(position[0] + i * (80 + 15), position[1]) for i in range(3)]
+            [(position[0] + i * (CARD_WIDTH + SPACE_BETWEEN_CARDS), position[1]) for i in range(3)]
             for position in self.player_positions
         ]
 
         # Set up deck and trump positions
-        self.deck_position = (412, 350)
-        self.trump_position = (512, 350)
+        self.deck_position = DECK_POSITION
+        self.trump_position = TRUMP_POSITION
 
+        # Keep track of available card buttons and the hands at the start of the trick 
         self.cardbuttons = []
-
         self.trick_hands = []
 
         self.game.player_pool.register_callback(self.drawCurrentStatus)
         self.game.start_match()
         self.startGame()
 
+    # Displays the initial screen that allows the user to select
+    # which and how many agents will play
     def showInitialScreen(self, agents):
         while self.game.state == State.INIT:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    # Handle button clicks
                     for button in self.buttons:
                         button.handle_event(event)
 
             # Draw background
-            self.screen.fill((0, 100, 0))
+            self.screen.fill(SCREEN_BACKGROUND_COLOR)
 
             self.buttons = []  # Initialize the list of buttons
 
@@ -164,7 +181,7 @@ class BiscaGameUI:
                     20,
                     "-",
                     lambda agent=agent: self.removeAgent(agent),
-                    backgroundcolor=(0, 100, 0),
+                    backgroundcolor=SCREEN_BACKGROUND_COLOR,
                 )
                 minus_button.draw(self.screen)
                 self.buttons.append(minus_button)
@@ -187,17 +204,19 @@ class BiscaGameUI:
                     20,
                     "+",
                     lambda agent=agent: self.addAgent(agent),
-                    backgroundcolor=(0, 100, 0),
+                    backgroundcolor=SCREEN_BACKGROUND_COLOR,
                 )
                 plus_button.draw(self.screen)
                 self.buttons.append(plus_button)
 
+            # Render and display start game button
             start_game_button = Button(
                 425, 200 + len(agents) * 40 + 5, 150, 50, "Start Game", self.endInit
             )
             start_game_button.draw(self.screen)
             self.buttons.append(start_game_button)
 
+            # Render and display informative max player text
             self.drawText(
                 "Maximum number of Players is 6", 500, 200 + len(agents) * 40 + 75
             )
@@ -210,6 +229,7 @@ class BiscaGameUI:
         self.buttons = []
         return self.agent_count
 
+    # Starts a game and enters the program into a loop for each trick
     def startGame(self):
         self.trick_hands = [
             copy.deepcopy(player.get_hand()) for player in self.game.player_pool.players
@@ -217,17 +237,19 @@ class BiscaGameUI:
 
         # Main game loop
         while not self.game.is_over():
-            self.screen.fill((0, 100, 0))
+            self.screen.fill(SCREEN_BACKGROUND_COLOR)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
 
+            # Draw most recent display status of the game
             self.drawCurrentStatus()
 
             if len(self.game.tricks) > 0:
                 self.showPlayerTakesHand(self.game.tricks[-1].get_winner())
 
+            # Advance to next round and keep track of players hands at the beginning of the round
             self.game.next_round()
             self.trick_hands = [
                 copy.deepcopy(player.get_hand())
@@ -246,14 +268,11 @@ class BiscaGameUI:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     # Having each button check if it was clicked. If it was, return its own index to the game engine
                     for button in self.cardbuttons:
-                        # print collision if there is collision between the event.pos and the button
-                        if button.rect.collidepoint(event.pos):
-                            print(f"Collison at {event.pos}")
-
                         cardIndex = button.handle_event(event)
                         if cardIndex != None:
                             return cardIndex
 
+            # Updates the display status
             self.drawCurrentStatus()
 
             pygame.display.flip()
@@ -261,19 +280,24 @@ class BiscaGameUI:
             # Limit the frame rate
             sleep(0.1)
 
+    # Displays the current status of the game
     def drawCurrentStatus(self, new_player=None):
-        self.screen.fill((0, 100, 0))
+        self.screen.fill(SCREEN_BACKGROUND_COLOR)
         played_cards = []
         self.cardbuttons = []
         self.buttons = []
 
+        # Get already played cards to display them above the rest of the hand
         if self.game.current_trick != None:
             played_cards = self.game.current_trick.get_cards()
+
         for playernr in range(len(self.game.player_pool.get_players())):
             player = self.game.player_pool.get_players()[playernr]
             for cardnr in range(len(self.trick_hands[playernr])):
                 card = self.trick_hands[playernr][cardnr]
                 cardUI = self.card_representations[card]
+
+                # Chack if card has been played and display accordingly
                 if card not in played_cards:
                     cardUI.graphics.position = self.hand_positions[playernr][cardnr]
                 else:
@@ -289,7 +313,9 @@ class BiscaGameUI:
                     "",
                     lambda c=card: self.handleCardClick(c),
                 )
+                # Keep track of active buttons
                 self.cardbuttons.append(cardUI.button)
+                # Display card on screen
                 self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
 
             # Draw player label
@@ -317,7 +343,7 @@ class BiscaGameUI:
             )
             self.screen.blit(score_label, score_rect)
 
-        # # Draw deck
+        # Draw deck
         if len(self.game.deck.cards) > 0:
             top_deck_card = self.game.deck.cards[-1]
             top_deck_card_graphics = self.card_representations[top_deck_card]
@@ -325,7 +351,7 @@ class BiscaGameUI:
                 top_deck_card_graphics.back_graphics.surface, self.deck_position
             )
 
-        # # Draw trump card
+        # Draw trump card
         if self.game.trump_card:
             trump_card_graphics = self.card_representations[self.game.trump_card]
             self.screen.blit(trump_card_graphics.graphics.surface, self.trump_position)
@@ -355,18 +381,19 @@ class BiscaGameUI:
         # Limit the frame rate
         sleep(0.1)
 
+    # Displays the end screen for the user with each players points and the winner
     def drawEndScreen(self):
         self.buttons = [self.play_again_button]
 
         while self.game.state == State.OVER:
-            self.screen.fill((0, 100, 0))
+            self.screen.fill(SCREEN_BACKGROUND_COLOR)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 self.play_again_button.handle_event(event)
 
-            # Render and display the agent text
+            # Render and display end of the game information
             self.drawText(f"Game Over", 500, 200, size=45)
             self.drawText(
                 f"Winner is {self.game.winner.name} with {sum([card.points for card in self.game.winner.pile])} points",
@@ -391,19 +418,23 @@ class BiscaGameUI:
             # Limit the frame rate
             sleep(0.1)
 
+    # Checks if the agent count is valid and if so starts a game
     def endInit(self):
         if sum(self.agent_count.values()) > 1:
             self.buttons = []
             self.game.state = State.RUNNING
 
+    # Remove an agent in the initial screen
     def removeAgent(self, agent):
         if self.agent_count[agent] > 0:
             self.agent_count[agent] -= 1
 
+    # Add an agent in the initial screen
     def addAgent(self, agent):
         if sum(self.agent_count.values()) < 6:
             self.agent_count[agent] += 1
 
+    # Utils function to make it easier to draw text
     def drawText(
         self, text, x, y, alignment="center", size=24, color=pygame.Color("white")
     ):
@@ -418,17 +449,11 @@ class BiscaGameUI:
         self.screen.blit(label, label_rect)
         return label
 
-    # Define Play Again Button
-    def play_again(self):
-        print("here")
+    # Play Again Button Action
+    def playAgain(self):
         BiscaGameUI()
 
-    def isTableFull(self):
-        return all(value is not None for value in self.table.values())
-
-    def isTableNotEmpty(self):
-        return any(value is not None for value in self.table.values())
-
+    # Handles the click on a displayed card
     def handleCardClick(self, card):
         if pygame.time.get_ticks() - self.last_clicked >= 500:
             print(card)
@@ -442,11 +467,13 @@ class BiscaGameUI:
                     self.game.player_pool.current_player_index
                 ].index(card)
 
+    # Displays informative text about which player won the last trick
     def showPlayerTakesHand(self, player):
         self.player_takes_hand_text = player.name + " takes trick"
         timer = threading.Timer(2, self.resetPlayerTakesHand)
         timer.start()
 
+    # Hides informative text about which player won the last trick
     def resetPlayerTakesHand(self):
         self.player_takes_hand_text = ""
 

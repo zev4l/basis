@@ -24,11 +24,10 @@ class CardGraphics(AbstractCardGraphics):
     @cached_property
     def surface(self) -> pygame.Surface:
         self.size = (80, 120)
-
+        self.position = (0, 0)
+        
         # Size is a property from AbstractCardGraphics
         x, y = self.size
-
-        self.position = (0, 0)
 
         # Create the surface on which we will plot the card
         surf = pygame.Surface(self.size)
