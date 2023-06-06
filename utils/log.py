@@ -1,11 +1,13 @@
 import logging
 
-class Logger():
+
+class Logger:
     """
     Simple utility class to log messages to the console.
     """
-    def __init__(self, name = "ROOT", level = logging.DEBUG) -> None:
-        formatter = logging.Formatter(fmt='[%(asctime)s][%(levelname)s]: %(message)s')
+
+    def __init__(self, name="ROOT", level=logging.DEBUG) -> None:
+        formatter = logging.Formatter(fmt="[%(asctime)s][%(levelname)s]: %(message)s")
         handler = logging.StreamHandler()
         handler.setFormatter(formatter)
 
@@ -24,5 +26,3 @@ class Logger():
 
     def error(self, message):
         self.logger.error(message)
-    
-    

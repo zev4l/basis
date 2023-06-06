@@ -7,13 +7,14 @@ from time import sleep
 # Constants
 MIN_PLAYERS = 2
 CARDS_PER_PLAYER = 3
-ROUND_DELAY_SECONDS = 0
+ROUND_DELAY_SECONDS = 1
 
 log = Logger()
 
+
 class Trick:
     def __init__(self):
-        self.plays = [] # List of tuples (player, card)
+        self.plays = []  # List of tuples (player, card)
         self.starting_suit = None
         self.winning_play = None
 
@@ -22,22 +23,22 @@ class Trick:
 
     def get_starting_suit(self) -> Suit:
         return self.starting_suit
-    
-    def add_play(self, player : Player, card : Card):
+
+    def add_play(self, player: Player, card: Card):
         self.plays.append((player, card))
-    
+
     def get_winner(self) -> Player:
         return self.winning_play[0]
-    
-    def set_starting_suit(self, suit : Suit):
+
+    def set_starting_suit(self, suit: Suit):
         self.starting_suit = suit
 
-    def set_winning_play(self, play : tuple):
+    def set_winning_play(self, play: tuple):
         self.winning_play = play
-    
-    def calc_winner(self, trump_suit : Suit):
+
+    def calc_winner(self, trump_suit: Suit):
         """
-        Calculates the winner of the trick. The winner is the player who played the highest card of the starting suit, 
+        Calculates the winner of the trick. The winner is the player who played the highest card of the starting suit,
         or the player who played the highest trump card.
         This method must only be called when all players have played a card.
         """
@@ -57,25 +58,27 @@ class Trick:
 
         return winner, winning_card
 
+
 class Game:
     """
     Houses main game logic, including tricks and winning logic.
     """
-    def __init__(self, stats_recorder : StatsRecorder = None):
+
+    def __init__(self, stats_recorder: StatsRecorder = None):
         self.state = State.INIT
         self.tricks = []
         self.current_trick = None
-        self.deck = Deck() # The deck is shuffled at instantiation
+        self.deck = Deck()  # The deck is shuffled at instantiation
         self.player_pool = Pool()
-        self.next_player : Player
-        self.trump_suit : Suit
-        self.trump_card : Card
-        self.stats_recorder = stats_recorder # To be incremented mid-game
+        self.next_player: Player
+        self.trump_suit: Suit
+        self.trump_card: Card
+        self.stats_recorder = stats_recorder  # To be incremented mid-game
         self.winner = None
 
         log.info("New game instantiated")
 
-    def add_player(self, player : Player):
+    def add_player(self, player: Player):
         # Reset player's hand and pile
         player.hand = []
         player.pile = []
@@ -84,26 +87,28 @@ class Game:
     def set_first_player(self, player):
         self.first_player = player
 
-    def start_match(self): 
+    def start_match(self):
         if len(self.player_pool) < MIN_PLAYERS:
             log.error("Not enough players to start a match")
             raise Exception("Not enough players to start a match")
-        
+
         if len(self.player_pool) == 3 or len(self.player_pool) == 6:
             self.deck.rectify()
-            log.debug(f"Rectifying deck as a {len(self.player_pool)}-player situation has been encountered.")
+            log.debug(
+                f"Rectifying deck as a {len(self.player_pool)}-player situation has been encountered."
+            )
 
         log.info("Starting match")
-        
+
         # Drawing trump card
-        self.trump_card  = self.deck.draw_card()
+        self.trump_card = self.deck.draw_card()
         self.trump_suit = self.trump_card.suit
         log.info(f"Trump card is {self.trump_card}")
 
         # Deal cards to players
         log.info("Dealing cards to players")
         self.deal_cards(CARDS_PER_PLAYER)
-        
+
         # Set first player
         self.set_first_player(self.player_pool.get_players()[0])
 
@@ -123,7 +128,7 @@ class Game:
                     player.add_to_hand(self.trump_card)
                     log.debug(f"Dealt trump card {self.trump_card} to {player.name}")
                     self.trump_card = None
-        
+
     def turn(self) -> Card:
         player = self.player_pool.get_current_player()
         card_played = player.action(self)
@@ -136,9 +141,7 @@ class Game:
         return player, card_played
 
     def next_round(self):
-
-        if (self.state == State.RUNNING):
-
+        if self.state == State.RUNNING:
             log.info(f"Starting trick number {len(self.tricks) + 1}")
 
             for player in self.player_pool.get_players():
@@ -146,10 +149,10 @@ class Game:
 
             # Setup new round
             self.current_trick = Trick()
-            
+
             # Set first player
-            self.player_pool.set_current_player(self.first_player) 
-            
+            self.player_pool.set_current_player(self.first_player)
+
             # Draw first card, and setting its suit as the round's suit
             # Delay for readability
             sleep(ROUND_DELAY_SECONDS)
@@ -158,11 +161,11 @@ class Game:
             self.current_trick.set_starting_suit(first_card.suit)
             self.current_trick.add_play(self.first_player, first_card)
             log.info(f"{self.first_player} played {first_card}")
-            
-            # Advance to next player
-            self.player_pool.advance_player()            
 
-            # Execute turns for all other players    
+            # Advance to next player
+            self.player_pool.advance_player()
+
+            # Execute turns for all other players
             for _ in range(len(self.player_pool) - 1):
                 # TODO: Proof this, because a hand no longer have cards to continue (e.g. num players % 40 != 0)
 
@@ -173,7 +176,7 @@ class Game:
                 player, card_played = self.turn()
                 self.current_trick.add_play(player, card_played)
                 log.info(f"{player.name} played {card_played}")
-            
+
                 self.player_pool.advance_player()
 
             self.tricks.append(self.current_trick)
@@ -193,12 +196,14 @@ class Game:
             self.deal_cards(1)
 
             self.check_game_end()
-    
+
     def check_game_end(self):
         # TODO: Ideally stat manager should collect stats during next_round. There may also be interest in collecting them here
-        
+
         # If the deck is empty and players have no more cards
-        if len(self.deck) == 0 and all([len(player.hand) == 0 for player in self.player_pool.players]):
+        if len(self.deck) == 0 and all(
+            [len(player.hand) == 0 for player in self.player_pool.players]
+        ):
             # Asserting game winner
             points_per_winner = {}
 
@@ -210,36 +215,44 @@ class Game:
                 self.state = State.DRAW
 
                 # In this case, winner is a tuple of the winners
-                self.winner = tuple([player for player, points in points_per_winner.items() if points == max(points_per_winner.values())])
+                self.winner = tuple(
+                    [
+                        player
+                        for player, points in points_per_winner.items()
+                        if points == max(points_per_winner.values())
+                    ]
+                )
 
                 log.info(f"Game ended in a draw between {self.winner}")
 
             else:
                 self.state = State.OVER
                 self.winner = max(points_per_winner, key=points_per_winner.get)
-                log.info(f"Game ended. Winner is {self.winner} with {points_per_winner[self.winner]} points")
-                
+                log.info(
+                    f"Game ended. Winner is {self.winner} with {points_per_winner[self.winner]} points"
+                )
+
             # Log a table of points per player
             log.debug("Points per player:")
             for player, points in points_per_winner.items():
                 log.debug(f"{player.name}: {points}")
-        
+
     def is_over(self):
         return self.state == State.OVER
 
     def __str__(self):
-        print('=====================================================')
-        print(f'|| trump_card  {self.trump_card.simple_print() } ')
-        print(f'|| deck {len(self.deck)}')
-        print(f'||')
-        x = '|| table  >'
-        for card in self.table_cards: 
-            x =  f'{x} {card.simple_print()} | '
-        print( x)
+        print("=====================================================")
+        print(f"|| trump_card  {self.trump_card.simple_print() } ")
+        print(f"|| deck {len(self.deck)}")
+        print(f"||")
+        x = "|| table  >"
+        for card in self.table_cards:
+            x = f"{x} {card.simple_print()} | "
+        print(x)
 
-        print(f'||')
-        print(f'|| rounds suit  => {self.current_suit}')
-        
+        print(f"||")
+        print(f"|| rounds suit  => {self.current_suit}")
+
         self.player_pool.print_players(self.first_player)
-        print(f'||')
-        print('=====================================================')
+        print(f"||")
+        print("=====================================================")

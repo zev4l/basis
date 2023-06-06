@@ -18,7 +18,7 @@ class Pool:
 
     def get_players(self):
         return self.players
-    
+
     def get_current_player(self):
         if self.players:
             return self.players[self.current_player_index]
@@ -29,7 +29,9 @@ class Pool:
         self._notify_observers()
 
     def advance_player(self):
-        self.set_current_player(self.players[(self.current_player_index + 1) % len(self.players)])
+        self.set_current_player(
+            self.players[(self.current_player_index + 1) % len(self.players)]
+        )
 
     def _notify_observers(self):
         for callback in self.callbacks:
@@ -69,6 +71,7 @@ class Rank(IntEnum):
         obj.points = points
         return obj
 
+
 class Suit(Enum):
     """
     A helper enum for card suits
@@ -98,30 +101,45 @@ class Card:
 
     def __repr__(self):
         return f"({self.suit.value}) {self.rank.name}"
-    
+
     def get_filename(self):
         filename = ""
-        
-        if self.suit == Suit.CLUBS: filename += "clubs"
-        elif self.suit == Suit.DIAMONDS: filename += "diamonds"
-        elif self.suit == Suit.HEARTS: filename += "hearts"
-        elif self.suit == Suit.SPADES: filename += "spades"
+
+        if self.suit == Suit.CLUBS:
+            filename += "clubs"
+        elif self.suit == Suit.DIAMONDS:
+            filename += "diamonds"
+        elif self.suit == Suit.HEARTS:
+            filename += "hearts"
+        elif self.suit == Suit.SPADES:
+            filename += "spades"
 
         filename += "-"
 
-        if self.rank == Rank.TWO: filename += "2"
-        elif self.rank == Rank.THREE: filename += "3"
-        elif self.rank == Rank.FOUR: filename += "4"
-        elif self.rank == Rank.FIVE: filename += "5"
-        elif self.rank == Rank.SIX: filename += "6"
-        elif self.rank == Rank.SEVEN: filename += "7"
-        elif self.rank == Rank.QUEEN: filename += "Q"
-        elif self.rank == Rank.JACK: filename += "J"
-        elif self.rank == Rank.KING: filename += "K"
-        elif self.rank == Rank.ACE: filename += "A"
+        if self.rank == Rank.TWO:
+            filename += "2"
+        elif self.rank == Rank.THREE:
+            filename += "3"
+        elif self.rank == Rank.FOUR:
+            filename += "4"
+        elif self.rank == Rank.FIVE:
+            filename += "5"
+        elif self.rank == Rank.SIX:
+            filename += "6"
+        elif self.rank == Rank.SEVEN:
+            filename += "7"
+        elif self.rank == Rank.QUEEN:
+            filename += "Q"
+        elif self.rank == Rank.JACK:
+            filename += "J"
+        elif self.rank == Rank.KING:
+            filename += "K"
+        elif self.rank == Rank.ACE:
+            filename += "A"
 
         filename += ".png"
         return filename
+
 
 class Deck:
     """

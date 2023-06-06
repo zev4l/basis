@@ -39,6 +39,7 @@ TRUMP_POSITION = (512, 350)
 
 SPACE_BETWEEN_CARDS = 15
 
+
 class BiscaGameUI:
     def __init__(self):
         # Initialize the game
@@ -56,9 +57,7 @@ class BiscaGameUI:
 
         # Keep active buttons
         self.buttons = []
-        self.play_again_button = Button(
-            400, 500, 200, 50, "Play Again", self.playAgain
-        )
+        self.play_again_button = Button(400, 500, 200, 50, "Play Again", self.playAgain)
         self.player_takes_hand_text = ""
 
         # -----------------------------------------------------
@@ -108,9 +107,18 @@ class BiscaGameUI:
         if self.num_players == 2:
             self.player_positions = [PLAYER_POSITION_1, PLAYER_POSITION_4]
         if self.num_players == 3:
-            self.player_positions = [PLAYER_POSITION_1, PLAYER_POSITION_3, PLAYER_POSITION_5]
+            self.player_positions = [
+                PLAYER_POSITION_1,
+                PLAYER_POSITION_3,
+                PLAYER_POSITION_5,
+            ]
         if self.num_players == 4:
-            self.player_positions = [PLAYER_POSITION_1, PLAYER_POSITION_2, PLAYER_POSITION_4, PLAYER_POSITION_5]
+            self.player_positions = [
+                PLAYER_POSITION_1,
+                PLAYER_POSITION_2,
+                PLAYER_POSITION_4,
+                PLAYER_POSITION_5,
+            ]
         if self.num_players == 5:
             self.player_positions = [
                 PLAYER_POSITION_1,
@@ -131,7 +139,10 @@ class BiscaGameUI:
 
         # Set up card positions for each player
         self.hand_positions = [
-            [(position[0] + i * (CARD_WIDTH + SPACE_BETWEEN_CARDS), position[1]) for i in range(3)]
+            [
+                (position[0] + i * (CARD_WIDTH + SPACE_BETWEEN_CARDS), position[1])
+                for i in range(3)
+            ]
             for position in self.player_positions
         ]
 
@@ -139,7 +150,7 @@ class BiscaGameUI:
         self.deck_position = DECK_POSITION
         self.trump_position = TRUMP_POSITION
 
-        # Keep track of available card buttons and the hands at the start of the trick 
+        # Keep track of available card buttons and the hands at the start of the trick
         self.cardbuttons = []
         self.trick_hands = []
 

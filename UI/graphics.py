@@ -25,7 +25,7 @@ class CardGraphics(AbstractCardGraphics):
     def surface(self) -> pygame.Surface:
         self.size = (80, 120)
         self.position = (0, 0)
-        
+
         # Size is a property from AbstractCardGraphics
         x, y = self.size
 
