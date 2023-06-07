@@ -41,6 +41,57 @@ class Player:
                 self.hand.remove(card)
                 return card
         return False
+    
+    
+    
+    ##checks what is the highest card in a list 
+    ## trump wins over current suit 
+    ## used to find leading card on the table 
+    def leading_Card (self , hand : Card,  suit : Suit, trump : Suit  ) -> Card:
+        
+        high_card =  hand[0]
+        
+        for c in hand : 
+            if (self.compare_cards (high_card , c, suit, trump) == -1):
+                high_card = c
+        
+        return high_card
+
+    ## compares two cards trump wins over current suit 
+    ## 1 wins 1st card  -1 wins 2nd card 0  they are equal 
+    def compare_cards(self,c1: Card, c2: Card, current_suit: Suit, trump: Suit):
+        # In case these are same-suit cards, compare the rank
+        if c1.suit == c2.suit:
+            return 1 if c1.rank > c2.rank else -1
+        
+        # If one of the cards is a trump, it wins
+        if c1.suit == trump or c2.suit == trump:
+            return 1 if c1.suit == trump else -1
+        
+        # If one of the cards is of the current suit, it wins
+        if c1.suit == current_suit or c2.suit == current_suit:
+            return 1 if c1.suit == current_suit else -1
+        
+        # If none of the cards is of the current suit, compare the rank
+        return 1 if c1.rank > c2.rank else -1 if c1.rank < c2.rank else 0
+
+    
+    
+    ## returns all cards from highest rank
+    def highest_rank_card(self, hand: Card) -> Card:
+        high_card = hand[0]
+
+        top_cards = []
+
+        for card in hand:
+            if card.rank > high_card.rank:
+                high_card = card
+
+        for card in hand:
+            if card.rank == high_card.rank:
+                top_cards.append(card)
+
+        return top_cards
 
     def playable_cards(self, world):
         current_suit = world.current_trick.get_starting_suit()
@@ -130,34 +181,21 @@ class SimpleGreedyAgent(Player):
     def __init__(self, name):
         super().__init__(name, "SimpleGreedyAgent")
 
-    def highest_card(self, hand: Card) -> Card:
-        high_card = hand[0]
 
-        top_cards = []
-
-        for card in hand:
-            if card.rank > high_card.rank:
-                high_card = card
-
-        for card in hand:
-            if card.rank == high_card.rank:
-                top_cards.append(card)
-
-        return top_cards
 
     def action(self, world) -> Card:
-        play_cards = self.playable_cards(world)
 
         print(self)
-        print(play_cards)
-
-        return choice(self.highest_card(play_cards))
+        print(self.hand)
+        
+        return choice(self.highest_rank_card(self.hand))
 
 
 class MinimizePointLossGreedyAgent(Player):
     """
     this Agent will always play the card that wont lose him points
     will also jump at the bit to make points
+    Trump over current Suit 
     when in first place to play will play highest card
 
     """
@@ -166,42 +204,47 @@ class MinimizePointLossGreedyAgent(Player):
         super().__init__(name, "MinimizePointLossGreedyAgent")
 
     def action(self, world) -> Card:
-        play_cards = self.playable_cards(world)
+
         print(self)
-        print(play_cards)
+        print(self.hand)
+        
+        table  = world.current_trick.get_cards()
+        
+        #if first player 
+        if (len(table) == 0 ) :
+        
+            play_cards = self.highest_rank_card(self.hand)            
+             
+        #if inside player 
+        else :
+            lead_card = self.leading_Card(table)
+            play_cards = self.cards_value_and_play(world,lead_card)
+
 
         return self.card_choice(self, play_cards, world)
 
-    def highest_card(self, hand: Card) -> Card:
-        high_card = hand[0]
 
-        top_cards = []
-
-        for card in hand:
-            if card.rank > high_card.rank:
-                high_card = card
-
-        for card in hand:
-            if card.rank == high_card.rank:
-                top_cards.append(card)
-
-        return top_cards
-
-    def compare_cards(c1: Card, c2: Card, current_suit: Suit, trump: Suit):
-        # In case these are same-suit cards, compare the rank
-        if c1.suit == c2.suit:
-            return 1 if c1.rank > c2.rank else -1
+    def cards_value_and_play (self,  world , lead_card :Card )-> Card : 
         
-        # If one of the cards is a trump, it wins
-        if c1.suit == trump or c2.suit == trump:
-            return 1 if c1.suit == trump else -1
+        high_value =  -1000
+        high_card =None
         
-        # If one of the cards is of the current suit, it wins
-        if c1.suit == current_suit or c2.suit == current_suit:
-            return 1 if c1.suit == current_suit else -1
+        suit = world.current_trick.get_starting_suit()
+        trump = world.trump_suit
         
-        # If none of the cards is of the current suit, compare the rank
-        return 1 if c1.rank > c2.rank else -1 if c1.rank < c2.rank else 0
+        for c in self.hand :
+            is_new_lead = self.compare_cards(c ,  lead_card , suit, trump)
+            is_trump =  (c.suit == trump) *100
+            
+            value =  is_new_lead*( c.points + is_trump)
+            if (value  > high_value  ):
+                high_value =value
+                high_card =c 
+        
+        return high_card
+
+
+
 
 
     def card_choice(self, hand: Card, world) -> Card:
