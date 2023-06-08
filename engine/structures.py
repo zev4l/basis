@@ -4,12 +4,14 @@ from enum import Enum, IntEnum
 
 class Pool:
     """
-    Structure to be used by Game, which represents an aggregation of players
+    Structure to be used by Game, which represents an aggregation of players.
+    The implementation of this class allows a third party to register on-player-change callbacks.
     """
 
     def __init__(self):
         self.players = []
         self.current_player_index = 0
+        self.callbacks = []
 
     def add_player(self, player):
         self.players.append(player)
@@ -24,12 +26,19 @@ class Pool:
 
     def set_current_player(self, player):
         self.current_player_index = self.players.index(player)
+        self._notify_observers()
 
     def advance_player(self):
-        if self.players:
-            self.current_player_index = (self.current_player_index + 1) % len(
-                self.players
-            )
+        self.set_current_player(
+            self.players[(self.current_player_index + 1) % len(self.players)]
+        )
+
+    def _notify_observers(self):
+        for callback in self.callbacks:
+            callback(self.get_current_player())
+
+    def register_callback(self, callback):
+        self.callbacks.append(callback)
 
     def __str__(self):
         return ", ".join([player.name for player in self.players])
@@ -45,16 +54,16 @@ class Rank(IntEnum):
     Allows comparing ranks between the real rank, and obtaining points via the points property (e.g. Rank.Ace.points -> 11)
     """
 
-    Ace = (10, 11)
-    Seven = (9, 10)
-    King = (8, 4)
-    Jack = (7, 3)
-    Queen = (6, 2)
-    Six = (5, 0)
-    Five = (4, 0)
-    Four = (3, 0)
-    Three = (2, 0)
-    Two = (1, 0)
+    ACE = (10, 11)
+    SEVEN = (9, 10)
+    KING = (8, 4)
+    JACK = (7, 3)
+    QUEEN = (6, 2)
+    SIX = (5, 0)
+    FIVE = (4, 0)
+    FOUR = (3, 0)
+    THREE = (2, 0)
+    TWO = (1, 0)
 
     def __new__(cls, value, points):
         obj = int.__new__(cls, value)
@@ -84,11 +93,52 @@ class Card:
         self.suit = suit
         self.points = rank.points
 
+    def __hash__(self) -> int:
+        return hash((self.rank, self.suit))
+
     def __eq__(self, other):
         return self.rank == other.rank and self.suit == other.suit
 
     def __repr__(self):
         return f"({self.suit.value}) {self.rank.name}"
+
+    def get_filename(self):
+        filename = ""
+
+        if self.suit == Suit.CLUBS:
+            filename += "clubs"
+        elif self.suit == Suit.DIAMONDS:
+            filename += "diamonds"
+        elif self.suit == Suit.HEARTS:
+            filename += "hearts"
+        elif self.suit == Suit.SPADES:
+            filename += "spades"
+
+        filename += "-"
+
+        if self.rank == Rank.TWO:
+            filename += "2"
+        elif self.rank == Rank.THREE:
+            filename += "3"
+        elif self.rank == Rank.FOUR:
+            filename += "4"
+        elif self.rank == Rank.FIVE:
+            filename += "5"
+        elif self.rank == Rank.SIX:
+            filename += "6"
+        elif self.rank == Rank.SEVEN:
+            filename += "7"
+        elif self.rank == Rank.QUEEN:
+            filename += "Q"
+        elif self.rank == Rank.JACK:
+            filename += "J"
+        elif self.rank == Rank.KING:
+            filename += "K"
+        elif self.rank == Rank.ACE:
+            filename += "A"
+
+        filename += ".png"
+        return filename
 
 
 class Deck:
@@ -128,6 +178,13 @@ class Deck:
         print("Deck:")
         for card in self.cards:
             print(card)
+
+    def rectify(self):
+        """
+        This method will adapt the deck to a situation of 3-player or 6-player game.
+        According to Bisca rules, in a 3-player game, the 2s are removed from the deck.
+        """
+        self.cards = [card for card in self.cards if card.rank != Rank.TWO]
 
     def __len__(self):
         return len(self.cards)

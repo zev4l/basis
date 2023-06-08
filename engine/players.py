@@ -1,4 +1,5 @@
 from engine.structures import Card, Suit
+
 from abc import abstractmethod
 from random import choice
 
@@ -44,19 +45,23 @@ class Player:
     def playable_cards(self, world):
         current_suit = world.current_trick.get_starting_suit()
 
-        if current_suit:
-            trump = world.trump_suit
+        world.trump_suit
 
-            valid_hand = []
+        valid_hand = []
 
-            for card in self.hand:
-                if card.suit == current_suit or card.suit == trump:
-                    valid_hand.append(card)
+        # If the user has a card of the current suit, he must play it
+        for card in self.hand:
+            if card.suit == current_suit:
+                valid_hand.append(card)
 
-            if len(valid_hand) > 0:
-                return valid_hand
+        # If the user has no cards of the current suit, he can play any card
+        if len(valid_hand) == 0:
+            valid_hand = self.hand
 
-        return self.hand
+        return valid_hand
+
+    def get_points(self):
+        return sum([card.points for card in self.pile])
 
     def display_hand(self):
         print(f"{self.name}'s hand:")
@@ -76,13 +81,24 @@ class Human(Player):
 
     def __init__(self, name):
         super().__init__(name, "Human")
+        self.input = None
+
+    def register_input_handler(self, input_handler):
+        self.input_handler = input_handler
 
     def action(self, world) -> Card:
-        # Collect user's card-choice, accounting for print_hand's 0-index change
-        card_idx = int(input("Choose your card: ")) - 1
-        card = self.hand[card_idx]
+        self.input = self.input_handler()
+
+        # Collect user's card-choice
+        card = self.hand[self.input]
+
+        # Reset input
+        self.input = None
 
         return card
+
+    def set_input(self, input):
+        self.input = input
 
 
 # AGENTS
@@ -154,9 +170,41 @@ class MinimizePointLossGreedyAgent(Player):
         print(self)
         print(play_cards)
 
-        return choice(play_cards)
+        return self.card_choice(self, play_cards, world)
 
-    def card_choice(self, hand: Card, table) -> Card:
+    def highest_card(self, hand: Card) -> Card:
+        high_card = hand[0]
+
+        top_cards = []
+
+        for card in hand:
+            if card.rank > high_card.rank:
+                high_card = card
+
+        for card in hand:
+            if card.rank == high_card.rank:
+                top_cards.append(card)
+
+        return top_cards
+
+    def compare_cards(c1: Card, c2: Card, current_suit: Suit, trump: Suit):
+        # In case these are same-suit cards, compare the rank
+        if c1.suit == c2.suit:
+            return 1 if c1.rank > c2.rank else -1
+        
+        # If one of the cards is a trump, it wins
+        if c1.suit == trump or c2.suit == trump:
+            return 1 if c1.suit == trump else -1
+        
+        # If one of the cards is of the current suit, it wins
+        if c1.suit == current_suit or c2.suit == current_suit:
+            return 1 if c1.suit == current_suit else -1
+        
+        # If none of the cards is of the current suit, compare the rank
+        return 1 if c1.rank > c2.rank else -1 if c1.rank < c2.rank else 0
+
+
+    def card_choice(self, hand: Card, world) -> Card:
         # check what is the card
         # 1st play  :  play highest card
         # check all cards in table and decide winner and if trump
@@ -169,4 +217,97 @@ class MinimizePointLossGreedyAgent(Player):
         # if no card beats it choose lowest card non trump
         # if card beats it choose highest beating card
 
-        return hand
+        table = world.current_trick.get_cards()
+
+        suit = world.current_trick.get_starting_suit()
+        trump = world.trump_suit
+
+        high_card = Card()
+
+        if table == None:
+            return choice(self.highest_card(hand))
+
+        else:
+            high_card = table[0]
+
+            for c in table:
+                if self.compare_cards(high_card, c, suit, trump) == -1:
+                    high_card = c
+
+        good_play = False
+        play = high_card
+
+        for card in hand:
+            if self.compare_cards(play, card, suit, trump) == -1:
+                good_play = True
+                play = card
+
+        if good_play == False:
+            lowest = hand[0]
+            for c in hand:
+                if self.compare_cards(lowest, card, suit, trump) == 1:
+                    lowest = card
+            play = lowest
+
+        return play
+
+
+class MPLGreedyTrumpSaveAgent(MinimizePointLossGreedyAgent):
+    """
+    this Agent will always play the card that wont lose him points
+    will also jump at the bit to make points , however will only use trumps when necessary
+    when in first place to play will play highest card
+
+    """
+
+    def __init__(self, name):
+        super().__init__(name, "MPLGreedyTrumpSaveAgent")
+
+    def action(self, world) -> Card:
+        play_cards = self.playable_cards(world)
+        print(self)
+        print(play_cards)
+
+        return self.card_choice(self, play_cards, world)
+
+    def card_choice(self, hand: Card, world) -> Card:
+        table = world.current_trick.get_cards()
+
+        suit = world.current_trick.get_starting_suit()
+        trump = world.trump_suit
+
+        high_card = Card()
+
+        if table == None:
+            return choice(self.highest_card(hand))
+
+        else:
+            high_card = table[0]
+
+            for c in table:
+                if self.compare_cards(high_card, c, suit, trump) == -1:
+                    high_card = c
+
+        good_play = False
+        play = high_card
+
+        for card in hand:
+            if self.compare_cards(play, card, suit, trump) == -1:
+                # Will check if there is a higher card that isnt trump will choose over trumps
+                # effectively saving them for when needed
+                if good_play:
+                    if play.suit != trump and card.suit == trump:
+                        play = play
+                    else:
+                        play = card
+                else:
+                    good_play = True
+                    play = card
+
+        if good_play == False:
+            play = hand[0]
+            for c in hand:
+                if self.compare_cards(play, card, suit, trump) == 1:
+                    play = card
+
+        return play
