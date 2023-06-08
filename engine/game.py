@@ -1,7 +1,7 @@
 from engine.players import Player
 from engine.structures import Pool, Deck, Suit, Card, State
 from utils.stats import StatsRecorder
-from utils.log import Logger
+from utils.log import log
 from time import sleep
 import logging
 
@@ -9,8 +9,6 @@ import logging
 MIN_PLAYERS = 2
 CARDS_PER_PLAYER = 3
 ROUND_DELAY_SECONDS = 1
-
-log = Logger()
 
 
 class Trick:
@@ -97,9 +95,6 @@ class Game:
         player.pile = []
         self.player_pool.add_player(player)
 
-    def set_first_player(self, player):
-        self.first_player = player
-
     def start_match(self):
         if len(self.player_pool) < MIN_PLAYERS:
             log.error("Not enough players to start a match")
@@ -122,22 +117,29 @@ class Game:
         log.info("Dealing cards to players")
         self.deal_cards(CARDS_PER_PLAYER)
 
-        # Set first player
-        self.set_first_player(self.player_pool.get_players()[0])
-
         # Set state to RUNNING
         self.state = State.RUNNING
 
     def deal_cards(self, num_cards):
+        """
+        Deals num_cards to each player in the player pool.
+        """
+
+        # Dealing cards to players in a round-robin fashion, starting with the current player which is the winner of the previous round
+        player_order = [
+            (self.player_pool.current_player_index + i) % len(self.player_pool)
+            for i in range(len(self.player_pool))
+        ]
+
         for _ in range(num_cards):
-            for player in self.player_pool.get_players():
+            for player_idx in player_order:
                 card = self.deck.draw_card()
+                player = self.player_pool.players[player_idx]
 
                 if card:
                     player.add_to_hand(card)
                     log.debug(f"Dealt {card} to {player.name}")
                 elif self.trump_card:
-                    # TODO: Review this logic
                     player.add_to_hand(self.trump_card)
                     log.debug(f"Dealt trump card {self.trump_card} to {player.name}")
                     self.trump_card = None
@@ -167,17 +169,14 @@ class Game:
             # Setup new round
             self.current_trick = Trick()
 
-            # Set first player
-            self.player_pool.set_current_player(self.first_player)
-
             # Draw first card, and setting its suit as the round's suit
             # Delay for readability
             sleep(self.delay)
 
             _, first_card = self.turn()
             self.current_trick.set_starting_suit(first_card.suit)
-            self.current_trick.add_play(self.first_player, first_card)
-            log.info(f"{self.first_player} played {first_card}")
+            self.current_trick.add_play(self.player_pool.get_current_player, first_card)
+            log.info(f"{self.player_pool.get_current_player()} played {first_card}")
 
             # Advance to next player
             self.player_pool.advance_player()
@@ -200,7 +199,7 @@ class Game:
             winner, winning_card = self.current_trick.calc_winner(self.trump_suit)
             log.info(f"Round winner is {winner.name} with {winning_card}")
 
-            self.first_player = winner
+            self.player_pool.set_current_player(winner)
             winner.add_to_pile(self.current_trick.get_cards())
             log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
 

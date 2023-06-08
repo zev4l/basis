@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from engine.structures import Card, Rank, Suit
 from engine.game import Game
 from engine.players import Human, RandomAgent, SimpleGreedyAgent

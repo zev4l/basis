@@ -1,10 +1,8 @@
 from engine.structures import Card, Suit
-from utils.log import Logger
+from utils.log import log
 
 from abc import abstractmethod
 from random import choice
-
-log = Logger()
 
 
 class Player:

@@ -100,44 +100,30 @@ class Card:
         return self.rank == other.rank and self.suit == other.suit
 
     def __repr__(self):
-        return f"({self.suit.value}) {self.rank.name}"
+        return f"{self.rank.name} ({self.suit.value})"
 
     def get_filename(self):
-        filename = ""
+        suit_names = {
+            Suit.CLUBS: "clubs",
+            Suit.DIAMONDS: "diamonds",
+            Suit.HEARTS: "hearts",
+            Suit.SPADES: "spades"
+        }
 
-        if self.suit == Suit.CLUBS:
-            filename += "clubs"
-        elif self.suit == Suit.DIAMONDS:
-            filename += "diamonds"
-        elif self.suit == Suit.HEARTS:
-            filename += "hearts"
-        elif self.suit == Suit.SPADES:
-            filename += "spades"
+        rank_names = {
+            Rank.TWO: "2",
+            Rank.THREE: "3",
+            Rank.FOUR: "4",
+            Rank.FIVE: "5",
+            Rank.SIX: "6",
+            Rank.SEVEN: "7",
+            Rank.QUEEN: "Q",
+            Rank.JACK: "J",
+            Rank.KING: "K",
+            Rank.ACE: "A"
+        }
 
-        filename += "-"
-
-        if self.rank == Rank.TWO:
-            filename += "2"
-        elif self.rank == Rank.THREE:
-            filename += "3"
-        elif self.rank == Rank.FOUR:
-            filename += "4"
-        elif self.rank == Rank.FIVE:
-            filename += "5"
-        elif self.rank == Rank.SIX:
-            filename += "6"
-        elif self.rank == Rank.SEVEN:
-            filename += "7"
-        elif self.rank == Rank.QUEEN:
-            filename += "Q"
-        elif self.rank == Rank.JACK:
-            filename += "J"
-        elif self.rank == Rank.KING:
-            filename += "K"
-        elif self.rank == Rank.ACE:
-            filename += "A"
-
-        filename += ".png"
+        filename = suit_names[self.suit] + "-" + rank_names[self.rank] + ".png"
         return filename
 
 
