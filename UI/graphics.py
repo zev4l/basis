@@ -18,14 +18,15 @@ class CardGraphics(AbstractCardGraphics):
     # This will be the file where the character is
     filepath: Path = None
 
+    position = (0, 0)
+
     def __post_init__(self):
         self.filepath = "UI/deck-gui/cards/" + str(self.card.filename)
 
     @cached_property
     def surface(self) -> pygame.Surface:
         self.size = (80, 120)
-        self.position = (0, 0)
-
+        
         # Size is a property from AbstractCardGraphics
         x, y = self.size
 

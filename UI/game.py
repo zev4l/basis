@@ -90,10 +90,12 @@ class BiscaGameUI:
 
         # Register the players
         player_count = 0
+        self.human_game = False
         for agent in agent_count.keys():
             for playernr in range(agent_count[agent]):
                 player = agent_types[agent](f"Player {str(player_count + 1)} ({agent})")
                 if agent == "Human":
+                    self.human_game = True
                     player.register_input_handler(self.getUserSelectedCard)
                 self.game.add_player(player)
                 player_count += 1
@@ -326,8 +328,19 @@ class BiscaGameUI:
                 )
                 # Keep track of active buttons
                 self.cardbuttons.append(cardUI.button)
-                # Display card on screen
-                self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
+
+                if not self.human_game:
+                    # Display card on screen
+                    self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
+                else:
+                    if type(player).__name__ == "Human":
+                        self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
+                    else:
+                        if card not in played_cards:
+                            self.screen.blit(cardUI.back_graphics.surface, cardUI.graphics.position)
+                        else:
+                            self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
+
 
             # Draw player label
             font = pygame.font.Font(None, 22)
@@ -387,7 +400,7 @@ class BiscaGameUI:
         )
         self.screen.blit(player_takes_hand_label, player_takes_hand_rect)
 
-        pygame.display.flip()
+        pygame.display.update()
 
         # Limit the frame rate
         sleep(0.1)
@@ -442,8 +455,13 @@ class BiscaGameUI:
 
     # Add an agent in the initial screen
     def addAgent(self, agent):
-        if sum(self.agent_count.values()) < 6:
-            self.agent_count[agent] += 1
+        # Only one human allowed per game
+        if agent == "Human":
+            if sum(self.agent_count.values()) < 6 and self.agent_count["Human"] == 0:
+                self.agent_count[agent] += 1
+        else:
+            if sum(self.agent_count.values()) < 6:
+                self.agent_count[agent] += 1
 
     # Utils function to make it easier to draw text
     def drawText(
@@ -473,6 +491,8 @@ class BiscaGameUI:
                 self.game
             ):
                 self.last_clicked = pygame.time.get_ticks()
+                
+                self.drawCurrentStatus()
 
                 return self.trick_hands[
                     self.game.player_pool.current_player_index
