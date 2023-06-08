@@ -25,7 +25,7 @@ class CardGraphics(AbstractCardGraphics):
     @cached_property
     def surface(self) -> pygame.Surface:
         self.size = (80, 120)
-        
+
         # Size is a property from AbstractCardGraphics
         x, y = self.size
 

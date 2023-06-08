@@ -1,6 +1,7 @@
 import sys
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import pygame
 import random
@@ -42,8 +43,8 @@ class BiscaGameUI:
     def __init__(self):
         # Initialize the game
         pygame.init()
-        pygame.display.set_caption('BASIS Platform')
-        icon = pygame.image.load('UI/deck-gui/card-game.png')
+        pygame.display.set_caption("BASIS Platform")
+        icon = pygame.image.load("UI/deck-gui/card-game.png")
         pygame.display.set_icon(icon)
 
         # Set up the screen
@@ -335,13 +336,18 @@ class BiscaGameUI:
                     self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
                 else:
                     if type(player).__name__ == "Human":
-                        self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
+                        self.screen.blit(
+                            cardUI.graphics.surface, cardUI.graphics.position
+                        )
                     else:
                         if card not in played_cards:
-                            self.screen.blit(cardUI.back_graphics.surface, cardUI.graphics.position)
+                            self.screen.blit(
+                                cardUI.back_graphics.surface, cardUI.graphics.position
+                            )
                         else:
-                            self.screen.blit(cardUI.graphics.surface, cardUI.graphics.position)
-
+                            self.screen.blit(
+                                cardUI.graphics.surface, cardUI.graphics.position
+                            )
 
             # Draw player label
             font = pygame.font.Font(None, 22)
@@ -492,7 +498,7 @@ class BiscaGameUI:
                 self.game
             ):
                 self.last_clicked = pygame.time.get_ticks()
-                
+
                 self.drawCurrentStatus()
 
                 return self.trick_hands[

@@ -12,7 +12,11 @@ ROUND_DELAY_SECONDS = 1
 
 log = Logger()
 
+
 class Trick:
+    """
+    A representation of a trick.    
+    """
     def __init__(self):
         self.plays = []  # List of tuples (player, card)
         self.starting_suit = None
@@ -48,8 +52,9 @@ class Trick:
             # In case of a same-suit play, the highest rank wins
             if card.suit == self.starting_suit and card.rank > winning_card.rank:
                 winner, winning_card = player, card
+            # In case of a trump play
             elif card.suit == trump_suit:
-                # In case of a trump play, if the winning play is not a trump play the trump card wins, regardless of rank.
+                # If the winning play is not a trump play the trump card wins, regardless of rank.
                 # if the winning play is a trump play, the highest rank wins.
                 if winning_card.suit != trump_suit or card.rank > winning_card.rank:
                     winner, winning_card = player, card
@@ -64,7 +69,12 @@ class Game:
     Houses main game logic, including tricks and winning logic.
     """
 
-    def __init__(self, stats_recorder: StatsRecorder = None, delay: int = ROUND_DELAY_SECONDS, log_level: int = logging.DEBUG):
+    def __init__(
+        self,
+        stats_recorder: StatsRecorder = None,
+        delay: int = ROUND_DELAY_SECONDS,
+        log_level: int = logging.DEBUG,
+    ):
         global log
         self.state = State.INIT
         self.tricks = []
@@ -133,10 +143,11 @@ class Game:
                     self.trump_card = None
 
     def turn(self) -> Card:
+        """
+        Executes a turn, returning the player and card played.
+        """
         player = self.player_pool.get_current_player()
         card_played = player.action(self)
-
-        # TODO: Validate played card here (i.e. valid suit, etc.), repeat if card_played is invalid
 
         # Consuming card from player's hand
         player.play(card_played)
@@ -144,6 +155,9 @@ class Game:
         return player, card_played
 
     def next_round(self):
+        """
+        Executes a round, which is a sequence of turns.
+        """
         if self.state == State.RUNNING:
             log.info(f"Starting trick number {len(self.tricks) + 1}")
 
@@ -169,7 +183,7 @@ class Game:
             self.player_pool.advance_player()
 
             # Execute turns for all other players
-            for _ in range(len(self.player_pool) - 1):                
+            for _ in range(len(self.player_pool) - 1):
                 # Delay for readability
                 sleep(self.delay)
 
@@ -192,7 +206,10 @@ class Game:
 
             # Record trick turnover
             if self.stats_recorder:
-                self.stats_recorder.update_highest_point_turnover(winner, sum([card.points for card in self.current_trick.get_cards()]))
+                self.stats_recorder.update_highest_point_turnover(
+                    winner,
+                    sum([card.points for card in self.current_trick.get_cards()]),
+                )
 
             # Delay for readability
             sleep(self.delay)
@@ -202,7 +219,10 @@ class Game:
 
             self.check_game_end()
 
-    def check_game_end(self):        
+    def check_game_end(self):
+        """
+        Checks if the game has ended, and if so, sets the game's state to OVER/DRAW and sets the winner(s).
+        """
         # If the deck is empty and players have no more cards
         if len(self.deck) == 0 and all(
             [len(player.hand) == 0 for player in self.player_pool.players]
@@ -261,11 +281,13 @@ class Game:
                         else:
                             self.stats_recorder.increment_losses(player)
 
-
             # Log a table of points per player
             log.debug("Points per player:")
             for player, points in points_per_player.items():
                 log.debug(f"{player.name}: {points}")
 
     def is_over(self):
+        """
+        Returns True if the game is over, False otherwise.
+        """
         return self.state == State.OVER or self.state == State.DRAW

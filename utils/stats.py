@@ -5,28 +5,43 @@ import json
 
 
 class StatsRecorder:
+    """
+    A class for recording statistics across various games.
+    """
     def __init__(self):
         self.player_stats = {}
 
     def _register_player(self, player: Player):
+        """
+        Registers a player in the stats recorder.
+        """
         if player not in self.player_stats:
             self.player_stats[player] = {
-                "wins": 0, 
-                "losses": 0, 
+                "wins": 0,
+                "losses": 0,
                 "draws": 0,
-                "point_turnovers": [],          # Per game
-                "highest_point_turnover": 0     # Per trick
-                }
+                "point_turnovers": [],  # Per game
+                "highest_point_turnover": 0,  # Per trick
+            }
 
     def increment_wins(self, player: Player):
+        """
+        Increments the number of wins a player has.
+        """
         self._register_player(player)
         self.player_stats[player]["wins"] += 1
 
     def increment_draws(self, player: Player):
+        """
+        Increments the number of draws a player has.
+        """
         self._register_player(player)
         self.player_stats[player]["draws"] += 1
 
     def increment_losses(self, player: Player):
+        """
+        Increments the number of losses a player has.
+        """
         self._register_player(player)
         self.player_stats[player]["losses"] += 1
 
@@ -51,24 +66,39 @@ class StatsRecorder:
         """
         comparison = {
             player1: self.get_player_stats(player1),
-            player2: self.get_player_stats(player2)
+            player2: self.get_player_stats(player2),
         }
 
         return comparison
-    
+
     def get_player_stats(self, player: Player):
+        """
+        Returns a dictionary of a player's stats, including a calculation of the average points per game.
+        """
         return {
-                "wins": self.player_stats[player].get("wins", 0),
-                "losses": self.player_stats[player].get("losses", 0),
-                "draws": self.player_stats[player].get("draws", 0),
-                "average_points_per_game": sum(self.player_stats[player].get("point_turnovers", 0)) / len(self.player_stats[player].get("point_turnovers", 0)) if self.player_stats[player].get("point_turnovers", False) else 0,
-                "highest_point_turnover": self.player_stats[player].get("highest_point_turnover", 0)
-            }
+            "wins": self.player_stats[player].get("wins", 0),
+            "losses": self.player_stats[player].get("losses", 0),
+            "draws": self.player_stats[player].get("draws", 0),
+            "average_points_per_game": sum(
+                self.player_stats[player].get("point_turnovers", 0)
+            )
+            / len(self.player_stats[player].get("point_turnovers", 0))
+            if self.player_stats[player].get("point_turnovers", False)
+            else 0,
+            "highest_point_turnover": self.player_stats[player].get(
+                "highest_point_turnover", 0
+            ),
+        }
 
     def rank_players(self, criterion="wins"):
+        """
+        Ranks players based on a given criterion, out of wins, total points scored and average points scored per game.
+        """
         if criterion == "wins":
             sorted_players = sorted(
-                self.player_stats.keys(), key=lambda p: self.player_stats[p]["wins"], reverse=True
+                self.player_stats.keys(),
+                key=lambda p: self.player_stats[p]["wins"],
+                reverse=True,
             )
         elif criterion == "points":
             sorted_players = sorted(
@@ -83,16 +113,25 @@ class StatsRecorder:
                 reverse=True,
             )
         else:
-            raise ValueError("Invalid criterion. Available options are 'wins', 'points', and 'average_point_turnover'.")
+            raise ValueError(
+                "Invalid criterion. Available options are 'wins', 'points', and 'average_point_turnover'."
+            )
 
         return sorted_players
-    
-    def save(self, filename = None):
+
+    def save(self, filename=None):
+        """
+        Saves the stats to a JSON file.
+        """
         if filename is None:
             filename = f"stats-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
 
-        parsed_stats = {"players": {},
-                        "iterations": len(self.player_stats[list(self.player_stats.keys())[0]]["point_turnovers"])}
+        parsed_stats = {
+            "players": {},
+            "iterations": len(
+                self.player_stats[list(self.player_stats.keys())[0]]["point_turnovers"]
+            ),
+        }
 
         with open(filename, "w") as f:
             for player in self.player_stats:
@@ -102,17 +141,44 @@ class StatsRecorder:
             json.dump(parsed_stats, f, indent=4)
 
     def print_table(self, criterion="wins"):
+        """
+        Prints a table of the player stats.
+        """
         sorted_players = self.rank_players(criterion)
 
         table = PrettyTable()
-        table.field_names = ["Player", "Type", "Wins", "Draws", "Losses", "W/L Ratio", "Average Points / Game", "Highest Point Turnover (Trick)"]
+        table.field_names = [
+            "Player",
+            "Type",
+            "Wins",
+            "Draws",
+            "Losses",
+            "W/L Ratio",
+            "Average Points / Game",
+            "Highest Point Turnover (Trick)",
+        ]
 
         for player in sorted_players:
             stats = self.get_player_stats(player)
 
-            win_loss_ratio = stats["wins"] / stats["losses"] if stats["losses"] != 0 else stats["wins"]
+            win_loss_ratio = (
+                stats["wins"] / stats["losses"]
+                if stats["losses"] != 0
+                else stats["wins"]
+            )
 
-            table.add_row([player, player.type, stats["wins"], stats["draws"], stats["losses"], f"{win_loss_ratio:.5f}", f"{stats['average_points_per_game']:.2f}", stats["highest_point_turnover"]])
+            table.add_row(
+                [
+                    player,
+                    player.type,
+                    stats["wins"],
+                    stats["draws"],
+                    stats["losses"],
+                    f"{win_loss_ratio:.5f}",
+                    f"{stats['average_points_per_game']:.2f}",
+                    stats["highest_point_turnover"],
+                ]
+            )
 
         print(f"Ranking based on {criterion}:")
         print(table)
