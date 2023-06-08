@@ -177,8 +177,7 @@ class RandomAgent(Player):
         super().__init__(name, "RandomAgent")
 
     def action(self, world) -> Card:
-        play_cards = self.playable_cards(world)
-        return choice(play_cards)
+        return choice(self.hand)
 
 
 class SimpleGreedyAgent(Player):
@@ -452,7 +451,7 @@ class GreedyCountingAgent(Player):
         # if inside player or last player
         else:
             lead_card = self.leading_card(table, suit, world.trump_suit)
-            play_cards = self.last_play(world, lead_card)
+            play_cards = self.decide_last_play(world, lead_card)
 
         return play_cards
 
@@ -538,7 +537,7 @@ class GreedyCountingAgent(Player):
 
         return high_card
 
-    def last_play(self, world, lead_card: Card) -> Card:
+    def decide_last_play(self, world, lead_card: Card) -> Card:
         """
         TODO: Explain this function
         """
