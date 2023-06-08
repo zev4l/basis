@@ -215,7 +215,7 @@ class MinimizePointLossGreedyAgent(Player):
         
             play_cards = self.highest_rank_card(self.hand)            
              
-        #if inside player 
+        #if inside player or last player
         else :
             lead_card = self.leading_Card(table)
             play_cards = self.cards_value_and_play(world,lead_card)
@@ -234,9 +234,13 @@ class MinimizePointLossGreedyAgent(Player):
         
         for c in self.hand :
             is_new_lead = self.compare_cards(c ,  lead_card , suit, trump)
-            is_trump =  (c.suit == trump) *100
+            is_trump =  (c.suit == trump) *5
             
-            value =  is_new_lead*( c.points + is_trump)
+            if (is_new_lead  ):
+                value =  10+c.points *2 + is_trump
+            else :
+                value = -10 - (c.points*2 + is_trump) 
+
             if (value  > high_value  ):
                 high_value =value
                 high_card =c 
