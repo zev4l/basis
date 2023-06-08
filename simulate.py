@@ -3,13 +3,14 @@
 import argparse
 import sys
 import logging
+import matplotlib
+import numpy as np
+from random import shuffle
+from matplotlib import pyplot as plt
+from scipy.interpolate import make_interp_spline # For interpolation
 from engine.players import Player
 from engine.game import Game
 from utils.stats import StatsRecorder
-import matplotlib
-from matplotlib import pyplot as plt
-from scipy.interpolate import make_interp_spline # For interpolation
-import numpy as np
 
 # Loading the available player types (excluding Human)
 PLAYER_TYPES = {clazz.__name__: clazz for clazz in Player.__subclasses__() if clazz.__name__ != 'Human'}
@@ -34,6 +35,9 @@ def run_simulations(iterations, delay, player_types, graph, interpolate, save):
     for i in range(iterations):
         game = Game(stats_recorder=stats, delay=delay, log_level=logging.ERROR)
 
+        # Shuffle the player starting positions
+        shuffle(player_instances)
+        
         # Add player instances to the game
         for player in player_instances:
             game.add_player(player)
