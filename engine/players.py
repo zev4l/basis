@@ -193,9 +193,9 @@ class SimpleGreedyAgent(Player):
 
 class MinimizePointLossGreedyAgent(Player):
     """
-    this Agent will always play the card that wont lose him points
-    will also jump at the bit to make points
-    Trump over current Suit 
+    this Agent will always play the card that will win the round 
+    will avoid  losing him points and will also jump at the bit to make points
+    Trump over current Suit to win a round
     when in first place to play will play highest card
 
     """
@@ -209,6 +209,8 @@ class MinimizePointLossGreedyAgent(Player):
         print(self.hand)
         
         table  = world.current_trick.get_cards()
+        suit = world.current_trick.get_starting_suit()
+        trump = world.trump_suit
         
         #if first player 
         if (len(table) == 0 ) :
@@ -217,17 +219,21 @@ class MinimizePointLossGreedyAgent(Player):
              
         #if inside player or last player
         else :
-            lead_card = self.leading_Card(table)
-            play_cards = self.cards_value_and_play(world,lead_card)
+            lead_card = self.leading_Card(table,suit,trump)
+            play_cards = [self.cards_value_and_play(world,lead_card)]
 
 
-        return self.card_choice(self, play_cards, world)
+        return choice(play_cards)
 
 
     def cards_value_and_play (self,  world , lead_card :Card )-> Card : 
         
         high_value =  -1000
         high_card =None
+        
+        value_cards = []
+        
+        print(lead_card)
         
         suit = world.current_trick.get_starting_suit()
         trump = world.trump_suit
@@ -236,7 +242,7 @@ class MinimizePointLossGreedyAgent(Player):
             is_new_lead = self.compare_cards(c ,  lead_card , suit, trump)
             is_trump =  (c.suit == trump) *5
             
-            if (is_new_lead  ):
+            if (is_new_lead == 1 ):
                 value =  10+c.points *2 + is_trump
             else :
                 value = -10 - (c.points*2 + is_trump) 
@@ -244,6 +250,9 @@ class MinimizePointLossGreedyAgent(Player):
             if (value  > high_value  ):
                 high_value =value
                 high_card =c 
+            value_cards.append ([c,value])
+        
+        print(value_cards)
         
         return high_card
 
@@ -299,7 +308,7 @@ class MinimizePointLossGreedyAgent(Player):
         return play
 
 
-class MPLGreedyTrumpSaveAgent(MinimizePointLossGreedyAgent):
+class MPLGreedyTrumpSaveAgent(Player):
     """
     this Agent will always play the card that wont lose him points
     will also jump at the bit to make points , however will only use trumps when necessary
@@ -311,11 +320,57 @@ class MPLGreedyTrumpSaveAgent(MinimizePointLossGreedyAgent):
         super().__init__(name, "MPLGreedyTrumpSaveAgent")
 
     def action(self, world) -> Card:
-        play_cards = self.playable_cards(world)
-        print(self)
-        print(play_cards)
 
-        return self.card_choice(self, play_cards, world)
+        print(self)
+        print(self.hand)
+        
+        table  = world.current_trick.get_cards()
+        suit = world.current_trick.get_starting_suit()
+        trump = world.trump_suit
+        
+        #if first player 
+        if (len(table) == 0 ) :
+        
+            play_cards = self.highest_rank_card(self.hand)            
+             
+        #if inside player or last player
+        else :
+            lead_card = self.leading_Card(table,suit,trump)
+            play_cards = [self.cards_value_and_play(world,lead_card)]
+
+
+        return choice(play_cards)
+
+
+    def cards_value_and_play (self,  world , lead_card :Card )-> Card : 
+        
+        high_value =  -1000
+        high_card =None
+        
+        value_cards = []
+        
+        print(lead_card)
+        
+        suit = world.current_trick.get_starting_suit()
+        trump = world.trump_suit
+        
+        for c in self.hand :
+            is_new_lead = self.compare_cards(c ,  lead_card , suit, trump)
+            is_trump =  (c.suit == trump) *5
+            
+            if (is_new_lead == 1 ):
+                value =  15+c.points - (is_trump *3 )
+            else :
+                value = -10 - (c.points*2 + is_trump) 
+
+            if (value  > high_value  ):
+                high_value =value
+                high_card =c 
+            value_cards.append ([c,value])
+        
+        print(value_cards)
+        
+        return high_card
 
     def card_choice(self, hand: Card, world) -> Card:
         table = world.current_trick.get_cards()
