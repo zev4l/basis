@@ -132,7 +132,11 @@ def main():
         sys.exit(1)
 
     # Flatting the player-argument list
-    player_types = [item for sublist in args.player for item in sublist] if args.player else list(PLAYER_TYPES.keys())
+    player_types = [item for sublist in args.player for item in sublist] if args.player else [
+        "SimpleGreedyAgent", 
+        "MinimizePointLossGreedyAgent",
+        "MPLGreedyTrumpSaveAgent",
+        "GreedyCountingAgent"]
 
     # Run the simulations
     run_simulations(args.iterations, args.delay, player_types, graph=args.graph, interpolate=args.interpolate, save=args.save)

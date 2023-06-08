@@ -51,7 +51,7 @@ The script supports the following command-line arguments:
 #### Examples
 > **Note**: If, for some reason, the following instructions don't work for you, or you want to use a specific version of Python, prefix them with e.g. `python` or `python3`.
 
-1. Run simulation with default parameters (1000 iterations with 2 `RandomAgent` and 2 `SimpleGreedyAgent`):
+1. Run simulation with default parameters (1000 iterations with `SimpleGreedyAgent`, `MinimizePointLossGreedyAgent`, `MPLGreedyTrumpSaveAgent`, `GreedyCountingAgent`):
    ```bash
    ./simulate.py
    ```

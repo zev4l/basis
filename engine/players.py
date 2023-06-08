@@ -1,16 +1,14 @@
-from engine.structures import Card, Suit, Rank, Deck
-from utils.log import log
-
 from abc import abstractmethod
 from random import choice
-from utils.log import Logger
-
-from math import comb
-
-log = Logger()
+from engine.structures import Card, Suit, Deck
+from utils.log import log
 
 
 class Player:
+    """
+    Represents a player, either human or agent. Base class for all players.
+    """
+
     def __init__(self, name, player_type):
         self.name = name
         self.hand = []
@@ -18,51 +16,69 @@ class Player:
         self.type = player_type
 
     def get_hand(self):
+        """
+        Returns the player's hand
+        """
         return self.hand
 
     def get_name(self):
+        """
+        Returns the player's name
+        """
         return self.name
 
     def get_pile(self):
+        """
+        Returns the player's pile
+        """
         return self.pile
 
     def add_to_hand(self, card):
+        """
+        Adds a card to the player's hand
+        """
         self.hand.append(card)
 
     def add_to_pile(self, cards):
+        """
+        Adds a list of cards to the player's pile
+        """
         self.pile.extend(cards)
 
     @abstractmethod
     def action(self, world) -> Card:
         """
-        This function is meant to be the brains of the player, and should be implemented differently based on the player's nature/strategy
+        This function is meant to be the brains of the player, and should be implemented differently based on the player's nature/strategy.
         """
-        pass
-        # card = self.agent.Action(self,world,isFirst)
-        # return self.play(card.rank,  card.suit)
 
     def play(self, played_card: Card) -> Card:
+        """
+        Removes a card from the player's hand and returns it.
+        """
         for card in self.hand:
             if card.rank == played_card.rank and card.suit == played_card.suit:
                 self.hand.remove(card)
                 return card
         return False
 
-    ##checks what is the highest card in a list
-    ## trump wins over current suit
-    ## used to find leading card on the table
-    def leading_Card(self, hand: Card, suit: Suit, trump: Suit) -> Card:
+    def leading_card(self, hand: Card, suit: Suit, trump: Suit) -> Card:
+        """
+        Returns the highest card in a list of cards.
+        A trump card wins over a card of the current suit.
+        Used to find the leading card on the table.
+        """
         high_card = hand[0]
 
-        for c in hand:
-            if self.compare_cards(high_card, c, suit, trump) == -1:
-                high_card = c
+        for card in hand:
+            if self.compare_cards(high_card, card, suit, trump) == -1:
+                high_card = card
 
         return high_card
 
-    ## compares two cards trump wins over current suit
-    ## 1 wins 1st card  -1 wins 2nd card 0  they are equal
     def compare_cards(self, c1: Card, c2: Card, current_suit: Suit, trump: Suit):
+        """
+        Compares two cards and returns 1 if the first card wins, -1 if the second card wins, and 0 if they are equal.
+        """
         # In case these are same-suit cards, compare the rank
         if c1.suit == c2.suit:
             return 1 if c1.rank > c2.rank else -1
@@ -80,24 +96,24 @@ class Player:
 
     ## returns all cards from highest rank
     def highest_rank_card(self, hand: Card) -> Card:
+        """
+        Returns the highest card in a list of cards.
+        """
+        # Getting the card with the highest rank
         high_card = hand[0]
-
-        top_cards = []
 
         for card in hand:
             if card.rank > high_card.rank:
                 high_card = card
 
-        for card in hand:
-            if card.rank == high_card.rank:
-                top_cards.append(card)
-
-        return top_cards
+        # Returning all cards with the highest rank
+        return [card for card in hand if card.rank == high_card.rank]
 
     def playable_cards(self, world):
+        """
+        Out of all the cards in the player's hand, returns the ones that can be played in the current trick.
+        """
         current_suit = world.current_trick.get_starting_suit()
-
-        world.trump_suit
 
         valid_hand = []
 
@@ -113,6 +129,9 @@ class Player:
         return valid_hand
 
     def get_points(self):
+        """
+        Returns the total number of points in the player's pile
+        """
         return sum([card.points for card in self.pile])
 
     def __str__(self):
@@ -126,24 +145,24 @@ class Human(Player):
 
     def __init__(self, name):
         super().__init__(name, "Human")
-        self.input = None
+        self.input_handler = None
 
     def register_input_handler(self, input_handler):
+        """
+        Registers a function to handle user input
+        """
         self.input_handler = input_handler
 
     def action(self, world) -> Card:
-        self.input = self.input_handler()
+        """
+        Retrieves the user's card-choice from the provided input handler
+        """
+        card_choice = self.input_handler()
 
         # Collect user's card-choice
-        card = self.hand[self.input]
-
-        # Reset input
-        self.input = None
+        card = self.hand[card_choice]
 
         return card
-
-    def set_input(self, input):
-        self.input = input
 
 
 # AGENTS
@@ -159,14 +178,13 @@ class RandomAgent(Player):
 
     def action(self, world) -> Card:
         play_cards = self.playable_cards(world)
-
         return choice(play_cards)
 
 
 class SimpleGreedyAgent(Player):
     """
-    this Agent will always play the highest valued card possible
-    if more than one card have the same rank  it will randomly pick
+    An agent which always plays the highest card in its hand.
+    Ties are broken at random.
     """
 
     def __init__(self, name):
@@ -178,196 +196,217 @@ class SimpleGreedyAgent(Player):
 
 class MinimizePointLossGreedyAgent(Player):
     """
-    this Agent will always play the card that will win the round
-    will avoid  losing him points and will also jump at the bit to make points
-    Trump over current Suit to win a round
-    when in first place to play will play highest card
-
+    An agent which always plays the card that will win the round, or its most valuable card otherwise.
+    This agent will always play a trump card if it can.
+    When in first place to play, it will play the highest card.
     """
 
-    def __init__(self, name, type="MinimizePointLossGreedyAgent"):
-        """
-        Also works as a pass-through constructor for the greedy sub-agents
-        """
-        super().__init__(name, type)
+    def __init__(self, name):
+        super().__init__(name, "MinimizePointLossGreedyAgent")
 
     def action(self, world) -> Card:
         table = world.current_trick.get_cards()
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
-        value_cards = []
 
         lead_card = None
 
-        # if first player
+        # If first player
         if len(table) == 0:
+            # Return the highest card in the hand
             play_cards = self.highest_rank_card(self.hand)
 
-        # if inside player or last player
+        # Otherwise, if middle or last player
         else:
-            lead_card = self.leading_Card(table, suit, trump)
-            play_cards = [self.cards_value_and_play(world, lead_card)]
+            # Find the leading card on the table
+            lead_card = self.leading_card(table, suit, world.trump_suit)
+            # Decide which card to play
+            play_cards = [self.decide(world, lead_card)]
 
         return choice(play_cards)
 
-    def cards_value_and_play(self, world, lead_card: Card) -> Card:
+    def decide(self, world, lead_card: Card) -> Card:
+        """
+        Computes the value of each card in the hand and returns best card to play.
+        Returns a list of cards in case of a tie.
+        """
+
+        trump_weight = 5
+
+        # Defining a floor value to find the highest card
         high_value = -1000
         high_card = None
 
+        # Keeping track of the value of each card
         value_cards = []
 
+        # Getting the current suit and trump suit
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
 
-        for c in self.hand:
-            is_new_lead = self.compare_cards(c, lead_card, suit, trump)
-            is_trump = (c.suit == trump) * 5
+        # For each card in the hand
+        for card in self.hand:
+            # Check if current card would beat the leading card
+            is_new_lead = self.compare_cards(card, lead_card, suit, world.trump_suit)
+
+            # If it would beat the leading card
+            trump_bonus = (card.suit == world.trump_suit) * trump_weight
 
             if is_new_lead == 1:
-                value = 10 + c.points * 2 + is_trump
+                value = 10 + card.points * 2 + trump_bonus
             else:
-                value = -10 - (c.points * 2 + is_trump)
+                value = -10 - (card.points * 2 + trump_bonus)
 
             if value > high_value:
                 high_value = value
-                high_card = c
-            value_cards.append([c, value])
+                high_card = card
+            value_cards.append([card, value])
+
         log.debug(
-            f"{self} current hand Evaluation {value_cards}, trying to beat {lead_card}"
+            f"{self} current hand evaluation {value_cards}, trying to beat {lead_card}"
         )
 
         return high_card
 
+
 class MPLGreedyTrumpSaveAgent(Player):
     """
-    this Agent will always play the card that wont lose him points
-    will also jump at the bit to make points , however will only use trumps when necessary
-    when in first place to play will play highest card
-
+    An agent which always plays the card that wont lose him points.
+    This agent will always attempt to make points, though it is very conservative regarding using trump cards.
+    When in first place to play, it will play the highest card.
     """
 
     def __init__(self, name):
         super().__init__(name, "MPLGreedyTrumpSaveAgent")
 
     def action(self, world) -> Card:
-        value_cards = []
-
+        # Getting the current suit and trump suit
         table = world.current_trick.get_cards()
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
+
         lead_card = None
-        # if first player
+
+        # If we are the first player
         if len(table) == 0:
             play_cards = self.highest_rank_card(self.hand)
 
-        # if inside player or last player
+        # Otherwise, if middle or last player
         else:
-            lead_card = self.leading_Card(table, suit, trump)
-            play_cards = [self.cards_value_and_play(world, lead_card)]
+            lead_card = self.leading_card(table, suit, world.trump_suit)
+            play_cards = [self.decide(world, lead_card)]
 
         return choice(play_cards)
 
-    def cards_value_and_play(self, world, lead_card: Card) -> Card:
+    def decide(self, world, lead_card: Card) -> Card:
+        """
+        Computes the perceived value of each card in the hand and returns best card to play.
+        """
+        trump_weight = 5
+
+        # Defining a floor value to find the highest card
         high_value = -1000
         high_card = None
 
+        # Keeping track of the value of each card
         value_cards = []
 
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
 
-        for c in self.hand:
-            is_new_lead = self.compare_cards(c, lead_card, suit, trump)
-            is_trump = (c.suit == trump) * 5
+        # For each card in the hand
+        for card in self.hand:
+            # Check if current card would beat the leading card
+            is_new_lead = self.compare_cards(card, lead_card, suit, world.trump_suit)
+            is_trump = (card.suit == world.trump_suit) * trump_weight
 
+            # If it would beat the leading card
             if is_new_lead == 1:
-                value = 15 + c.points - (is_trump * 3)
+                value = 15 + card.points - (is_trump * 3)
             else:
-                value = -10 - (c.points * 2 + is_trump)
+                value = -10 - (card.points * 2 + is_trump)
 
             if value > high_value:
                 high_value = value
-                high_card = c
-            value_cards.append([c, value])
+                high_card = card
+            value_cards.append([card, value])
 
         log.debug(
-            f"{self} current hand Evaluation {value_cards}, trying to beat {lead_card}"
+            f"{self} current hand evaluation {value_cards}, trying to beat {lead_card}"
         )
+
         return high_card
 
 
 class MPLGreedyTrumpBasedAgent(Player):
     """
-    this Agent will always play the card that wont lose him points
-    will force trump battles
-    when in first place to play will play trump or highest card
-
+    An agent which always plays the card that wont lose him points, though it will force trump battles.
+    When in first place to play, it will play the highest card.
     """
 
     def __init__(self, name):
-        super().__init__(name, "MPLGreedyTrumpSaveAgent")
+        super().__init__(name, "MPLGreedyTrumpBasedAgent")
 
     def action(self, world) -> Card:
-        value_cards = []
-
         table = world.current_trick.get_cards()
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
+
         lead_card = None
-        # if first player
+
+        # If we are the first player
         if len(table) == 0:
             play_cards = self.first_play(world)
 
-        # if inside player or last player
+        # Otherwise, if middle or last player
         else:
-            lead_card = self.leading_Card(table, suit, trump)
-            (play_cards,) = [self.cards_value_and_play(world, lead_card)]
+            lead_card = self.leading_card(table, suit, world.trump_suit)
+            play_cards = [self.decide(world, lead_card)]
 
         return choice(play_cards)
 
     def first_play(self, world) -> Card:
-        trump = world.trump_suit
+        """
+        Returns either the the highest trump card, or if there are no trump cards, the highest card in the hand.
+        """
+        # Obtaining all trumps in hand
+        trumps = [card for card in self.hand if card.suit == world.trump_suit]
 
-        trumps = []
-
-        for card in self.hand:
-            if card.suit == trump:
-                trumps.append(card)
-
+        # If there are trumps in hand, return the highest one
         if len(trumps) > 0:
-            high_trump = trumps[0]
-            for c in trumps:
-                if c.rank > high_trump.rank:
-                    high_trump = c
-            return [high_trump]
+            return self.highest_rank_card(trumps)
+        else:
+            # Otherwise, return the highest card in the hand
+            return self.highest_rank_card(self.hand)
 
-        return self.highest_rank_card(self.hand)
+    def decide(self, world, lead_card: Card) -> Card:
+        """
+        Computes the perceived value of each card in the hand and returns best card to play.
+        """
+        trump_weight = 100
 
-    def cards_value_and_play(self, world, lead_card: Card) -> Card:
+        # Defining a floor value to find the highest card
         high_value = -1000
         high_card = None
 
+        # Keeping track of the perceived value of each card
         value_cards = []
 
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
-
-        for c in self.hand:
-            is_new_lead = self.compare_cards(c, lead_card, suit, trump)
-            is_trump = (c.suit == trump) * 100
+        # For each card in the hand
+        for card in self.hand:
+            # Check if current card would beat the leading card
+            is_new_lead = self.compare_cards(card, lead_card, suit, world.trump_suit)
+            is_trump = (card.suit == world.trump_suit) * trump_weight
 
             if is_new_lead == 1:
-                value = 15 + c.points + is_trump
+                value = 15 + card.points + is_trump
             else:
-                value = -10 - (c.points * 2 + is_trump)
+                value = -10 - (card.points * 2 + is_trump)
 
             if value > high_value:
                 high_value = value
-                high_card = c
-            value_cards.append([c, value])
+                high_card = card
+
+            value_cards.append([card, value])
 
         log.debug(
-            f"{self} current hand Evaluation {value_cards}, trying to beat {lead_card}"
+            f"{self} current hand evaluation {value_cards}, trying to beat {lead_card}"
         )
 
         return high_card
@@ -375,21 +414,19 @@ class MPLGreedyTrumpBasedAgent(Player):
 
 class GreedyCountingAgent(Player):
     """
-    this Agent will always play the card that wont lose him points
-    will force trump battles
-    when in first place to play will play trump or highest card
-
+    An agent which will always play the card that won't him points.
+    This agent will force trump battles.
+    When in first place to play, it will play the highest card.
     """
 
     def __init__(self, name):
-        super().__init__(name, "CountingAgent")
+        super().__init__(name, "GreedyCountingAgent")
         self.counting_deck = Deck()
         self.cards_removed = []
 
     def action(self, world) -> Card:
         table = world.current_trick.get_cards()
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
 
         lead_card = None
 
@@ -397,41 +434,45 @@ class GreedyCountingAgent(Player):
         cards_to_remove += table
         cards_to_remove += self.hand
 
-        for p in world.player_pool.get_players():
-            cards_to_remove += p.pile
+        for player in world.player_pool.get_players():
+            cards_to_remove += player.pile
 
-        for c in cards_to_remove:
-            if c in self.counting_deck.cards:
-                self.counting_deck.cards.remove(c)
+        for card in cards_to_remove:
+            if card in self.counting_deck.cards:
+                self.counting_deck.cards.remove(card)
 
         # if first player
         if len(table) == 0:
-            play_cards = self.first_play(world)
+            play_cards = self.decide_first_play(world)
 
         elif len(table) > 0 and len(table) < len(world.player_pool):
-            lead_card = self.leading_Card(table, suit, trump)
-            play_cards = self.mid_play(world, lead_card)
+            lead_card = self.leading_card(table, suit, world.trump_suit)
+            play_cards = self.decide_mid_play(world, lead_card)
 
         # if inside player or last player
         else:
-            lead_card = self.leading_Card(table, suit, trump)
-            play_cards = self.cards_value_and_play(world, lead_card)
+            lead_card = self.leading_card(table, suit, world.trump_suit)
+            play_cards = self.last_play(world, lead_card)
 
         return play_cards
 
-    def first_play(self, world) -> Card:
+    def decide_first_play(self, world) -> Card:
+        """
+        TODO: Explain this function
+        """
         high_value = -1000
         high_card = None
 
         value_cards = []
 
-        trump = world.trump_suit
         cards_missing = len(self.counting_deck)
         nplayers = len(world.player_pool)
         cards_player_hands = (nplayers - 1) * len(self.hand)
 
         for card in self.hand:
-            beats = self.card_beats_mine(card, self.counting_deck, trump, card.suit)
+            beats = self.count_beating_cards(
+                card, self.counting_deck, world.trump_suit, card.suit
+            )
             prob_not_being_beat = self.calculate_probability(
                 cards_player_hands, cards_missing, beats
             )
@@ -445,25 +486,42 @@ class GreedyCountingAgent(Player):
 
         return high_card
 
-    def mid_play(self, world, lead_card: Card) -> Card:
+    def decide_mid_play(self, world, lead_card: Card) -> Card:
+        """
+        TODO: Explain this function
+        """
+        trump_weight = 5
+
+        # Defining a floor value to find the highest card
         high_value = -1000
         high_card = None
 
+        # Keeping track of the perceived value of each card
         value_cards = []
 
         current_suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
+
         cards_missing = len(self.counting_deck)
         nplayers = len(world.player_pool)
         cards_player_hands = (nplayers - 1) * len(self.hand)
 
+        # For each card in the hand
         for card in self.hand:
-            beats = self.card_beats_mine(card, self.counting_deck, trump, current_suit)
+            # Calculate the number of cards in the deck that beat the current card
+            beats = self.count_beating_cards(
+                card, self.counting_deck, world.trump_suit, current_suit
+            )
+
+            # Calculate the probability of the current card not being beaten
             prob_not_being_beat = self.calculate_probability(
                 cards_player_hands, cards_missing, beats
             )
-            is_new_lead = self.compare_cards(card, lead_card, current_suit, trump)
-            is_trump = (card.suit == trump) * 5
+
+            # Check if current card would beat the leading card
+            is_new_lead = self.compare_cards(
+                card, lead_card, current_suit, world.trump_suit
+            )
+            is_trump = (card.suit == world.trump_suit) * trump_weight
 
             if is_new_lead == 1:
                 value = prob_not_being_beat * card.points
@@ -475,52 +533,64 @@ class GreedyCountingAgent(Player):
             value_cards.append([card, value])
 
         log.debug(
-            f"{self} current hand Evaluation {value_cards}, trying to beat {lead_card}"
+            f"{self} current hand evaluation {value_cards}, trying to beat {lead_card}"
         )
 
         return high_card
 
     def last_play(self, world, lead_card: Card) -> Card:
+        """
+        TODO: Explain this function
+        """
+        trump_weight = 5
+
+        # Defining a floor value to find the highest card
         high_value = -1000
         high_card = None
 
         value_cards = []
 
         suit = world.current_trick.get_starting_suit()
-        trump = world.trump_suit
 
-        for c in self.hand:
-            is_new_lead = self.compare_cards(c, lead_card, suit, trump)
-            is_trump = (c.suit == trump) * 5
+        for card in self.hand:
+            is_new_lead = self.compare_cards(card, lead_card, suit, world.trump_suit)
+            is_trump = (card.suit == world.trump_suit) * trump_weight
 
             if is_new_lead == 1:
-                value = 10 + c.points * 2 + is_trump
+                value = 10 + card.points * 2 + is_trump
             else:
-                value = -10 - (c.points * 2 + is_trump)
+                value = -10 - (card.points * 2 + is_trump)
 
             if value > high_value:
                 high_value = value
-                high_card = c
-            value_cards.append([c, value])
+                high_card = card
+            value_cards.append([card, value])
+
         log.debug(
-            f"{self} current hand Evaluation {value_cards}, trying to beat {lead_card}"
+            f"{self} current hand evaluation {value_cards}, trying to beat {lead_card}"
         )
 
         return high_card
 
-    def card_beats_mine(self, card: Card, deck: Deck, trump: Suit, suit=None):
+    def count_beating_cards(self, card: Card, deck: Deck, trump: Suit, suit=None):
+        """
+        Returns the number of cards in the deck that beat the given card.
+        """
         counter = 0
 
-        if suit == None:
-            suit == card.suit
+        if suit is None:
+            suit = card.suit
 
-        for c in deck.cards:
-            if self.compare_cards(c, card, suit, trump) == 1:
+        for deck_card in deck.cards:
+            if self.compare_cards(deck_card, card, suit, trump) == 1:
                 counter += 1
 
         return counter
 
     def calculate_probability(self, cards_in_hand, deck_size, cards_that_beat):
+        """
+        Calculates the probability of a card not being beaten by a card in the deck.
+        """
         probability = 1.0
 
         for i in range(cards_that_beat):

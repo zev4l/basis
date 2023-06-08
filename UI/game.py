@@ -492,7 +492,6 @@ class BiscaGameUI:
     # Handles the click on a displayed card
     def handleCardClick(self, card):
         if pygame.time.get_ticks() - self.last_clicked >= 500:
-            print(card)
             # This condition checks the card against the player's playable cards, thus avoiding illegal plays
             if card in self.game.player_pool.get_current_player().playable_cards(
                 self.game

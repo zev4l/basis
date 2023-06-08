@@ -175,7 +175,7 @@ class Game:
 
             _, first_card = self.turn()
             self.current_trick.set_starting_suit(first_card.suit)
-            self.current_trick.add_play(self.player_pool.get_current_player, first_card)
+            self.current_trick.add_play(self.player_pool.get_current_player(), first_card)
             log.info(f"{self.player_pool.get_current_player()} played {first_card}")
 
             # Advance to next player
