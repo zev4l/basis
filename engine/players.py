@@ -1,4 +1,5 @@
-from engine.structures import Card, Suit,Deck,Rank
+from engine.structures import Card, Suit
+from utils.log import log
 
 from abc import abstractmethod
 from random import choice
@@ -117,14 +118,7 @@ class Player:
 
     def get_points(self):
         return sum([card.points for card in self.pile])
-
-    def display_hand(self):
-        print(f"{self.name}'s hand:")
-        hand = "||"
-        for card in self.hand:
-            hand = f"{hand} {card.simple_print()} |"
-        print(f"{hand}|")
-
+    
     def __str__(self):
         return self.name
 
@@ -200,8 +194,11 @@ class MinimizePointLossGreedyAgent(Player):
 
     """
 
-    def __init__(self, name):
-        super().__init__(name, "MinimizePointLossGreedyAgent")
+    def __init__(self, name, type = "MinimizePointLossGreedyAgent"):
+        """
+        Also works as a pass-through constructor for the greedy sub-agents
+        """
+        super().__init__(name, type)
 
     def action(self, world) -> Card:
 

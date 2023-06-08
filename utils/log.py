@@ -15,6 +15,9 @@ class Logger:
         self.logger.setLevel(level)
         self.logger.addHandler(handler)
 
+    def set_level(self, level):
+        self.logger.setLevel(level)
+
     def info(self, message):
         self.logger.info(message)
 
@@ -26,3 +29,5 @@ class Logger:
 
     def error(self, message):
         self.logger.error(message)
+
+log = Logger()

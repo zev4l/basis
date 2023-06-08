@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 import sys
-from time import sleep
 import pygame
 from pygame_cards.abstract import AbstractCardGraphics
 from pygame_cards.back import CardBackGraphics
 
-from card import UICard, CardRank, CardSuit
+from UI.card import UICard
 
 
 @dataclass
@@ -18,13 +17,14 @@ class CardGraphics(AbstractCardGraphics):
     # This will be the file where the character is
     filepath: Path = None
 
+    position = (0, 0)
+
     def __post_init__(self):
         self.filepath = "UI/deck-gui/cards/" + str(self.card.filename)
 
     @cached_property
     def surface(self) -> pygame.Surface:
         self.size = (80, 120)
-        self.position = (0, 0)
 
         # Size is a property from AbstractCardGraphics
         x, y = self.size

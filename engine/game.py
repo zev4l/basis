@@ -1,18 +1,20 @@
 from engine.players import Player
 from engine.structures import Pool, Deck, Suit, Card, State
 from utils.stats import StatsRecorder
-from utils.log import Logger
+from utils.log import log
 from time import sleep
+import logging
 
 # Constants
 MIN_PLAYERS = 2
 CARDS_PER_PLAYER = 3
 ROUND_DELAY_SECONDS = 1
 
-log = Logger()
-
 
 class Trick:
+    """
+    A representation of a trick.    
+    """
     def __init__(self):
         self.plays = []  # List of tuples (player, card)
         self.starting_suit = None
@@ -48,8 +50,9 @@ class Trick:
             # In case of a same-suit play, the highest rank wins
             if card.suit == self.starting_suit and card.rank > winning_card.rank:
                 winner, winning_card = player, card
+            # In case of a trump play
             elif card.suit == trump_suit:
-                # In case of a trump play, if the winning play is not a trump play the trump card wins, regardless of rank.
+                # If the winning play is not a trump play the trump card wins, regardless of rank.
                 # if the winning play is a trump play, the highest rank wins.
                 if winning_card.suit != trump_suit or card.rank > winning_card.rank:
                     winner, winning_card = player, card
@@ -64,7 +67,13 @@ class Game:
     Houses main game logic, including tricks and winning logic.
     """
 
-    def __init__(self, stats_recorder: StatsRecorder = None):
+    def __init__(
+        self,
+        stats_recorder: StatsRecorder = None,
+        delay: int = ROUND_DELAY_SECONDS,
+        log_level: int = logging.DEBUG,
+    ):
+        global log
         self.state = State.INIT
         self.tricks = []
         self.current_trick = None
@@ -75,6 +84,8 @@ class Game:
         self.trump_card: Card
         self.stats_recorder = stats_recorder  # To be incremented mid-game
         self.winner = None
+        self.delay = delay
+        log.set_level(log_level)
 
         log.info("New game instantiated")
 
@@ -83,9 +94,6 @@ class Game:
         player.hand = []
         player.pile = []
         self.player_pool.add_player(player)
-
-    def set_first_player(self, player):
-        self.first_player = player
 
     def start_match(self):
         if len(self.player_pool) < MIN_PLAYERS:
@@ -109,31 +117,39 @@ class Game:
         log.info("Dealing cards to players")
         self.deal_cards(CARDS_PER_PLAYER)
 
-        # Set first player
-        self.set_first_player(self.player_pool.get_players()[0])
-
         # Set state to RUNNING
         self.state = State.RUNNING
 
     def deal_cards(self, num_cards):
+        """
+        Deals num_cards to each player in the player pool.
+        """
+
+        # Dealing cards to players in a round-robin fashion, starting with the current player which is the winner of the previous round
+        player_order = [
+            (self.player_pool.current_player_index + i) % len(self.player_pool)
+            for i in range(len(self.player_pool))
+        ]
+
         for _ in range(num_cards):
-            for player in self.player_pool.get_players():
+            for player_idx in player_order:
                 card = self.deck.draw_card()
+                player = self.player_pool.players[player_idx]
 
                 if card:
                     player.add_to_hand(card)
                     log.debug(f"Dealt {card} to {player.name}")
                 elif self.trump_card:
-                    # TODO: Review this logic
                     player.add_to_hand(self.trump_card)
                     log.debug(f"Dealt trump card {self.trump_card} to {player.name}")
                     self.trump_card = None
 
     def turn(self) -> Card:
+        """
+        Executes a turn, returning the player and card played.
+        """
         player = self.player_pool.get_current_player()
         card_played = player.action(self)
-
-        # TODO: Validate played card here (i.e. valid suit, etc.), repeat if card_played is invalid
 
         # Consuming card from player's hand
         player.play(card_played)
@@ -141,6 +157,9 @@ class Game:
         return player, card_played
 
     def next_round(self):
+        """
+        Executes a round, which is a sequence of turns.
+        """
         if self.state == State.RUNNING:
             log.info(f"Starting trick number {len(self.tricks) + 1}")
 
@@ -150,27 +169,22 @@ class Game:
             # Setup new round
             self.current_trick = Trick()
 
-            # Set first player
-            self.player_pool.set_current_player(self.first_player)
-
             # Draw first card, and setting its suit as the round's suit
             # Delay for readability
-            sleep(ROUND_DELAY_SECONDS)
+            sleep(self.delay)
 
             _, first_card = self.turn()
             self.current_trick.set_starting_suit(first_card.suit)
-            self.current_trick.add_play(self.first_player, first_card)
-            log.info(f"{self.first_player} played {first_card}")
+            self.current_trick.add_play(self.player_pool.get_current_player, first_card)
+            log.info(f"{self.player_pool.get_current_player()} played {first_card}")
 
             # Advance to next player
             self.player_pool.advance_player()
 
             # Execute turns for all other players
             for _ in range(len(self.player_pool) - 1):
-                # TODO: Proof this, because a hand no longer have cards to continue (e.g. num players % 40 != 0)
-
                 # Delay for readability
-                sleep(ROUND_DELAY_SECONDS)
+                sleep(self.delay)
 
                 # Adding current play to trick
                 player, card_played = self.turn()
@@ -185,12 +199,19 @@ class Game:
             winner, winning_card = self.current_trick.calc_winner(self.trump_suit)
             log.info(f"Round winner is {winner.name} with {winning_card}")
 
-            self.first_player = winner
+            self.player_pool.set_current_player(winner)
             winner.add_to_pile(self.current_trick.get_cards())
             log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
 
+            # Record trick turnover
+            if self.stats_recorder:
+                self.stats_recorder.update_highest_point_turnover(
+                    winner,
+                    sum([card.points for card in self.current_trick.get_cards()]),
+                )
+
             # Delay for readability
-            sleep(ROUND_DELAY_SECONDS)
+            sleep(self.delay)
 
             # Topping up player hands
             self.deal_cards(1)
@@ -198,28 +219,32 @@ class Game:
             self.check_game_end()
 
     def check_game_end(self):
-        # TODO: Ideally stat manager should collect stats during next_round. There may also be interest in collecting them here
-
+        """
+        Checks if the game has ended, and if so, sets the game's state to OVER/DRAW and sets the winner(s).
+        """
         # If the deck is empty and players have no more cards
         if len(self.deck) == 0 and all(
             [len(player.hand) == 0 for player in self.player_pool.players]
         ):
             # Asserting game winner
-            points_per_winner = {}
+            points_per_player = {}
 
             for player in self.player_pool.players:
-                points_per_winner[player] = sum([card.points for card in player.pile])
+                points_per_player[player] = sum([card.points for card in player.pile])
 
-            # Checking for any two players with the same score, i.e., if there are non-unique points
-            if len(set(points_per_winner.values())) != len(points_per_winner.values()):
+            # Checking the max score
+            max_score = max(points_per_player.values())
+
+            # Checking if there is more than one player with max score
+            if list(points_per_player.values()).count(max_score) > 1:
                 self.state = State.DRAW
 
                 # In this case, winner is a tuple of the winners
                 self.winner = tuple(
                     [
                         player
-                        for player, points in points_per_winner.items()
-                        if points == max(points_per_winner.values())
+                        for player, points in points_per_player.items()
+                        if points == max(points_per_player.values())
                     ]
                 )
 
@@ -227,32 +252,41 @@ class Game:
 
             else:
                 self.state = State.OVER
-                self.winner = max(points_per_winner, key=points_per_winner.get)
+                self.winner = max(points_per_player, key=points_per_player.get)
                 log.info(
-                    f"Game ended. Winner is {self.winner} with {points_per_winner[self.winner]} points"
+                    f"Game ended. Winner is {self.winner} with {points_per_player[self.winner]} points"
                 )
+
+            # Record stats, incrementing wins, losses and draws
+            if self.stats_recorder:
+                for player in self.player_pool.players:
+                    # Record points for this game
+                    self.stats_recorder.add_points(player, points_per_player[player])
+
+                    # In case it was a draw
+                    if self.state == State.DRAW:
+                        # Increment draw for each winner, as self.winner is a tuple
+                        if player in self.winner:
+                            self.stats_recorder.increment_draws(player)
+                        # Increment losses for each player that is not a winner
+                        else:
+                            self.stats_recorder.increment_losses(player)
+                    # In case it was not a draw
+                    if self.state == State.OVER:
+                        # Increment wins for the winner
+                        if player == self.winner:
+                            self.stats_recorder.increment_wins(player)
+                        # Increment losses for each player that is not the winner
+                        else:
+                            self.stats_recorder.increment_losses(player)
 
             # Log a table of points per player
             log.debug("Points per player:")
-            for player, points in points_per_winner.items():
+            for player, points in points_per_player.items():
                 log.debug(f"{player.name}: {points}")
 
     def is_over(self):
-        return self.state == State.OVER
-
-    def __str__(self):
-        print("=====================================================")
-        print(f"|| trump_card  {self.trump_card.simple_print() } ")
-        print(f"|| deck {len(self.deck)}")
-        print(f"||")
-        x = "|| table  >"
-        for card in self.table_cards:
-            x = f"{x} {card.simple_print()} | "
-        print(x)
-
-        print(f"||")
-        print(f"|| rounds suit  => {self.current_suit}")
-
-        self.player_pool.print_players(self.first_player)
-        print(f"||")
-        print("=====================================================")
+        """
+        Returns True if the game is over, False otherwise.
+        """
+        return self.state == State.OVER or self.state == State.DRAW
