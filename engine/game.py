@@ -190,9 +190,8 @@ class Game:
             winner.add_to_pile(self.current_trick.get_cards())
             log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
 
-            # Record stats
+            # Record trick turnover
             if self.stats_recorder:
-                self.stats_recorder.add_points(winner, sum([card.points for card in self.current_trick.get_cards()]))
                 self.stats_recorder.update_highest_point_turnover(winner, sum([card.points for card in self.current_trick.get_cards()]))
 
             # Delay for readability
@@ -209,21 +208,24 @@ class Game:
             [len(player.hand) == 0 for player in self.player_pool.players]
         ):
             # Asserting game winner
-            points_per_winner = {}
+            points_per_player = {}
 
             for player in self.player_pool.players:
-                points_per_winner[player] = sum([card.points for card in player.pile])
+                points_per_player[player] = sum([card.points for card in player.pile])
 
-            # Checking for any two players with the same score, i.e., if there are non-unique points
-            if len(set(points_per_winner.values())) != len(points_per_winner.values()):
+            # Checking the max score
+            max_score = max(points_per_player.values())
+
+            # Checking if there is more than one player with max score
+            if list(points_per_player.values()).count(max_score) > 1:
                 self.state = State.DRAW
 
                 # In this case, winner is a tuple of the winners
                 self.winner = tuple(
                     [
                         player
-                        for player, points in points_per_winner.items()
-                        if points == max(points_per_winner.values())
+                        for player, points in points_per_player.items()
+                        if points == max(points_per_player.values())
                     ]
                 )
 
@@ -231,14 +233,17 @@ class Game:
 
             else:
                 self.state = State.OVER
-                self.winner = max(points_per_winner, key=points_per_winner.get)
+                self.winner = max(points_per_player, key=points_per_player.get)
                 log.info(
-                    f"Game ended. Winner is {self.winner} with {points_per_winner[self.winner]} points"
+                    f"Game ended. Winner is {self.winner} with {points_per_player[self.winner]} points"
                 )
 
             # Record stats, incrementing wins, losses and draws
             if self.stats_recorder:
                 for player in self.player_pool.players:
+                    # Record points for this game
+                    self.stats_recorder.add_points(player, points_per_player[player])
+
                     # In case it was a draw
                     if self.state == State.DRAW:
                         # Increment draw for each winner, as self.winner is a tuple
@@ -259,7 +264,7 @@ class Game:
 
             # Log a table of points per player
             log.debug("Points per player:")
-            for player, points in points_per_winner.items():
+            for player, points in points_per_player.items():
                 log.debug(f"{player.name}: {points}")
 
     def is_over(self):

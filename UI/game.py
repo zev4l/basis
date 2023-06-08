@@ -1,24 +1,22 @@
 import sys
 import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 import pygame
 import random
 from time import sleep
 import threading
 import copy
 
-# Local UI imports
-from graphics import CardGraphics, CardBackGraphics
-from button import Button
-from card import UICard
-
-
-# directory reach
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
+# Engine imports
 from engine.game import Game
-from engine.players import Player, Human, RandomAgent, SimpleGreedyAgent
+from engine.players import Player
 from engine.structures import State
+
+# Local UI imports
+from UI.graphics import CardGraphics, CardBackGraphics
+from UI.button import Button
+from UI.card import UICard
 
 SCREEN_BACKGROUND_COLOR = (0, 100, 0)
 SCREEN_WIDTH = 1000
@@ -44,6 +42,9 @@ class BiscaGameUI:
     def __init__(self):
         # Initialize the game
         pygame.init()
+        pygame.display.set_caption('BASIS Platform')
+        icon = pygame.image.load('UI/deck-gui/card-game.png')
+        pygame.display.set_icon(icon)
 
         # Set up the screen
         self.size = self.width, self.height = SCREEN_WIDTH, SCREEN_HEIGHT
@@ -507,6 +508,3 @@ class BiscaGameUI:
     # Hides informative text about which player won the last trick
     def resetPlayerTakesHand(self):
         self.player_takes_hand_text = ""
-
-
-BiscaGameUI()

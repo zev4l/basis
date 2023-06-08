@@ -1,5 +1,8 @@
 from engine.players import Player
 from prettytable import PrettyTable
+from datetime import datetime
+import json
+
 
 class StatsRecorder:
     def __init__(self):
@@ -38,6 +41,7 @@ class StatsRecorder:
         """
         Updates the highest number of points a player scored in a single trick.
         """
+        self._register_player(player)
         if points > self.player_stats[player]["highest_point_turnover"]:
             self.player_stats[player]["highest_point_turnover"] = points
 
@@ -83,6 +87,20 @@ class StatsRecorder:
 
         return sorted_players
     
+    def save(self, filename = None):
+        if filename is None:
+            filename = f"stats-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
+
+        parsed_stats = {"players": {},
+                        "iterations": len(self.player_stats[list(self.player_stats.keys())[0]]["point_turnovers"])}
+
+        with open(filename, "w") as f:
+            for player in self.player_stats:
+                parsed_stats["players"][player.name] = self.get_player_stats(player)
+                parsed_stats["players"][player.name]["type"] = player.type
+
+            json.dump(parsed_stats, f, indent=4)
+
     def print_table(self, criterion="wins"):
         sorted_players = self.rank_players(criterion)
 
@@ -94,7 +112,7 @@ class StatsRecorder:
 
             win_loss_ratio = stats["wins"] / stats["losses"] if stats["losses"] != 0 else stats["wins"]
 
-            table.add_row([player, player.type, stats["wins"], stats["draws"], stats["losses"], win_loss_ratio, f"{stats['average_points_per_game']:.2f}", stats["highest_point_turnover"]])
+            table.add_row([player, player.type, stats["wins"], stats["draws"], stats["losses"], f"{win_loss_ratio:.5f}", f"{stats['average_points_per_game']:.2f}", stats["highest_point_turnover"]])
 
         print(f"Ranking based on {criterion}:")
         print(table)

@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 import sys
-from time import sleep
 import pygame
 from pygame_cards.abstract import AbstractCardGraphics
 from pygame_cards.back import CardBackGraphics
 
-from card import UICard, CardRank, CardSuit
+from UI.card import UICard
 
 
 @dataclass
