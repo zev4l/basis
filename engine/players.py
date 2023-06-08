@@ -1,7 +1,10 @@
 from engine.structures import Card, Suit
+from utils.log import Logger
 
 from abc import abstractmethod
 from random import choice
+
+log = Logger()
 
 
 class Player:
@@ -62,14 +65,7 @@ class Player:
 
     def get_points(self):
         return sum([card.points for card in self.pile])
-
-    def display_hand(self):
-        print(f"{self.name}'s hand:")
-        hand = "||"
-        for card in self.hand:
-            hand = f"{hand} {card.simple_print()} |"
-        print(f"{hand}|")
-
+    
     def __str__(self):
         return self.name
 
@@ -114,10 +110,6 @@ class RandomAgent(Player):
 
     def action(self, world) -> Card:
         play_cards = self.playable_cards(world)
-
-        print(self)
-        print(play_cards)
-
         return choice(play_cards)
 
 
@@ -147,10 +139,6 @@ class SimpleGreedyAgent(Player):
 
     def action(self, world) -> Card:
         play_cards = self.playable_cards(world)
-
-        print(self)
-        print(play_cards)
-
         return choice(self.highest_card(play_cards))
 
 
@@ -162,15 +150,15 @@ class MinimizePointLossGreedyAgent(Player):
 
     """
 
-    def __init__(self, name):
-        super().__init__(name, "MinimizePointLossGreedyAgent")
+    def __init__(self, name, type = "MinimizePointLossGreedyAgent"):
+        """
+        Also works as a pass-through constructor for the greedy sub-agents
+        """
+        super().__init__(name, type)
 
     def action(self, world) -> Card:
         play_cards = self.playable_cards(world)
-        print(self)
-        print(play_cards)
-
-        return self.card_choice(self, play_cards, world)
+        return self.card_choice(play_cards, world)
 
     def highest_card(self, hand: Card) -> Card:
         high_card = hand[0]
@@ -222,7 +210,7 @@ class MinimizePointLossGreedyAgent(Player):
         suit = world.current_trick.get_starting_suit()
         trump = world.trump_suit
 
-        high_card = Card()
+        high_card = None
 
         if table == None:
             return choice(self.highest_card(hand))
@@ -265,8 +253,8 @@ class MPLGreedyTrumpSaveAgent(MinimizePointLossGreedyAgent):
 
     def action(self, world) -> Card:
         play_cards = self.playable_cards(world)
-        print(self)
-        print(play_cards)
+        log.debug(self)
+        log.debug(play_cards)
 
         return self.card_choice(self, play_cards, world)
 
