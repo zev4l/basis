@@ -1,0 +1,312 @@
+{
+    "2": [
+        {
+            "wins": 331739,
+            "losses": 158190,
+            "draws": 10071,
+            "average_points_per_game": 64.82906,
+            "highest_game_turnover": 118,
+            "average_points_per_trick": 6.111019884904158,
+            "highest_trick_turnover": 22,
+            "type": "GreedyCountingAgent"
+        },
+        {
+            "wins": 327970,
+            "losses": 161953,
+            "draws": 10077,
+            "average_points_per_game": 59.64303,
+            "highest_game_turnover": 118,
+            "average_points_per_trick": 5.948675828598272,
+            "highest_trick_turnover": 22,
+            "type": "MPLGreedyTrumpSaveAgent"
+        },
+        {
+            "wins": 323719,
+            "losses": 166247,
+            "draws": 10034,
+            "average_points_per_game": 59.24253,
+            "highest_game_turnover": 116,
+            "average_points_per_trick": 5.960780663908431,
+            "highest_trick_turnover": 22,
+            "type": "MinimizePointLossGreedyAgent"
+        },
+        {
+            "wins": 273625,
+            "losses": 216121,
+            "draws": 10254,
+            "average_points_per_game": 55.17094,
+            "highest_game_turnover": 113,
+            "average_points_per_trick": 5.8745923153506645,
+            "highest_trick_turnover": 22,
+            "type": "MPLGreedyTrumpBasedAgent"
+        },
+        {
+            "wins": 112881,
+            "losses": 380374,
+            "draws": 6745,
+            "average_points_per_game": 41.15258,
+            "highest_game_turnover": 117,
+            "average_points_per_trick": 5.382503969593048,
+            "highest_trick_turnover": 22,
+            "type": "SimpleGreedyAgent"
+        },
+        {
+            "wins": 103197,
+            "losses": 390246,
+            "draws": 6557,
+            "average_points_per_game": 40.74167,
+            "highest_game_turnover": 110,
+            "average_points_per_trick": 5.348585059233742,
+            "highest_trick_turnover": 22,
+            "type": "RandomAgent"
+        }
+    ],
+    "3": [
+        {
+            "wins": 432508,
+            "losses": 554749,
+            "draws": 12743,
+            "average_points_per_game": 41.33595,
+            "highest_game_turnover": 114,
+            "average_points_per_trick": 9.87756969817173,
+            "highest_trick_turnover": 32,
+            "type": "MPLGreedyTrumpSaveAgent"
+        },
+        {
+            "wins": 415170,
+            "losses": 572440,
+            "draws": 12390,
+            "average_points_per_game": 40.44032,
+            "highest_game_turnover": 116,
+            "average_points_per_trick": 9.839589679704911,
+            "highest_trick_turnover": 33,
+            "type": "MinimizePointLossGreedyAgent"
+        },
+        {
+            "wins": 410670,
+            "losses": 577349,
+            "draws": 11981,
+            "average_points_per_game": 42.5932,
+            "highest_game_turnover": 114,
+            "average_points_per_trick": 10.636307563222466,
+            "highest_trick_turnover": 33,
+            "type": "GreedyCountingAgent"
+        },
+        {
+            "wins": 352232,
+            "losses": 635911,
+            "draws": 11857,
+            "average_points_per_game": 36.07085,
+            "highest_game_turnover": 117,
+            "average_points_per_trick": 9.46577495761889,
+            "highest_trick_turnover": 33,
+            "type": "MPLGreedyTrumpBasedAgent"
+        },
+        {
+            "wins": 188182,
+            "losses": 803622,
+            "draws": 8196,
+            "average_points_per_game": 32.86839,
+            "highest_game_turnover": 118,
+            "average_points_per_trick": 10.047193861955126,
+            "highest_trick_turnover": 33,
+            "type": "RandomAgent"
+        },
+        {
+            "wins": 169242,
+            "losses": 823075,
+            "draws": 7683,
+            "average_points_per_game": 30.09538,
+            "highest_game_turnover": 110,
+            "average_points_per_trick": 9.170807368244633,
+            "highest_trick_turnover": 32,
+            "type": "SimpleGreedyAgent"
+        }
+    ],
+    "4": [
+        {
+            "wins": 305726,
+            "losses": 682424,
+            "draws": 11850,
+            "average_points_per_game": 30.74987,
+            "highest_game_turnover": 108,
+            "average_points_per_trick": 12.132088424557818,
+            "highest_trick_turnover": 42,
+            "type": "MPLGreedyTrumpSaveAgent"
+        },
+        {
+            "wins": 302573,
+            "losses": 685616,
+            "draws": 11811,
+            "average_points_per_game": 30.69095,
+            "highest_game_turnover": 110,
+            "average_points_per_trick": 12.154590998198055,
+            "highest_trick_turnover": 42,
+            "type": "GreedyCountingAgent"
+        },
+        {
+            "wins": 294523,
+            "losses": 693807,
+            "draws": 11670,
+            "average_points_per_game": 30.29845,
+            "highest_game_turnover": 108,
+            "average_points_per_trick": 12.09094210417099,
+            "highest_trick_turnover": 43,
+            "type": "MinimizePointLossGreedyAgent"
+        },
+        {
+            "wins": 254169,
+            "losses": 734798,
+            "draws": 11033,
+            "average_points_per_game": 28.26073,
+            "highest_game_turnover": 104,
+            "average_points_per_trick": 11.608528309947094,
+            "highest_trick_turnover": 41,
+            "type": "MPLGreedyTrumpBasedAgent"
+        },
+        {
+            "wins": 166030,
+            "losses": 825667,
+            "draws": 8303,
+            "average_points_per_game": 25.25191,
+            "highest_game_turnover": 116,
+            "average_points_per_trick": 11.896071531203038,
+            "highest_trick_turnover": 42,
+            "type": "RandomAgent"
+        },
+        {
+            "wins": 146004,
+            "losses": 846180,
+            "draws": 7816,
+            "average_points_per_game": 23.23953,
+            "highest_game_turnover": 102,
+            "average_points_per_trick": 11.335305508269965,
+            "highest_trick_turnover": 42,
+            "type": "SimpleGreedyAgent"
+        }
+    ],
+    "5": [
+        {
+            "wins": 113564,
+            "losses": 381460,
+            "draws": 4976,
+            "average_points_per_game": 25.37188,
+            "highest_game_turnover": 111,
+            "average_points_per_trick": 15.255316718275562,
+            "highest_trick_turnover": 52,
+            "type": "MPLGreedyTrumpSaveAgent"
+        },
+        {
+            "wins": 112723,
+            "losses": 382302,
+            "draws": 4975,
+            "average_points_per_game": 25.4486,
+            "highest_game_turnover": 110,
+            "average_points_per_trick": 15.253296571565572,
+            "highest_trick_turnover": 53,
+            "type": "GreedyCountingAgent"
+        },
+        {
+            "wins": 110164,
+            "losses": 384747,
+            "draws": 5089,
+            "average_points_per_game": 25.13427,
+            "highest_game_turnover": 104,
+            "average_points_per_trick": 15.233906502857767,
+            "highest_trick_turnover": 53,
+            "type": "MinimizePointLossGreedyAgent"
+        },
+        {
+            "wins": 100016,
+            "losses": 395256,
+            "draws": 4728,
+            "average_points_per_game": 24.35694,
+            "highest_game_turnover": 114,
+            "average_points_per_trick": 14.914268919191981,
+            "highest_trick_turnover": 47,
+            "type": "MPLGreedyTrumpBasedAgent"
+        },
+        {
+            "wins": 84522,
+            "losses": 411516,
+            "draws": 3962,
+            "average_points_per_game": 22.55456,
+            "highest_game_turnover": 110,
+            "average_points_per_trick": 15.637803246181473,
+            "highest_trick_turnover": 53,
+            "type": "RandomAgent"
+        },
+        {
+            "wins": 65438,
+            "losses": 430876,
+            "draws": 3686,
+            "average_points_per_game": 19.68831,
+            "highest_game_turnover": 113,
+            "average_points_per_trick": 14.210974210173015,
+            "highest_trick_turnover": 46,
+            "type": "SimpleGreedyAgent"
+        }
+    ],
+    "6": [
+        {
+            "wins": 18129,
+            "losses": 81088,
+            "draws": 783,
+            "average_points_per_game": 21.06598,
+            "highest_game_turnover": 120,
+            "average_points_per_trick": 19.997133228914517,
+            "highest_trick_turnover": 56,
+            "type": "MPLGreedyTrumpSaveAgent"
+        },
+        {
+            "wins": 17795,
+            "losses": 81437,
+            "draws": 768,
+            "average_points_per_game": 20.30985,
+            "highest_game_turnover": 111,
+            "average_points_per_trick": 21.25973495791986,
+            "highest_trick_turnover": 56,
+            "type": "RandomAgent"
+        },
+        {
+            "wins": 17308,
+            "losses": 81907,
+            "draws": 785,
+            "average_points_per_game": 20.69056,
+            "highest_game_turnover": 116,
+            "average_points_per_trick": 20.510071371927044,
+            "highest_trick_turnover": 56,
+            "type": "GreedyCountingAgent"
+        },
+        {
+            "wins": 17296,
+            "losses": 81891,
+            "draws": 813,
+            "average_points_per_game": 20.8007,
+            "highest_game_turnover": 112,
+            "average_points_per_trick": 19.888037938980197,
+            "highest_trick_turnover": 55,
+            "type": "MinimizePointLossGreedyAgent"
+        },
+        {
+            "wins": 15988,
+            "losses": 83225,
+            "draws": 787,
+            "average_points_per_game": 20.54226,
+            "highest_game_turnover": 116,
+            "average_points_per_trick": 19.643003308535256,
+            "highest_trick_turnover": 57,
+            "type": "MPLGreedyTrumpBasedAgent"
+        },
+        {
+            "wins": 11241,
+            "losses": 88151,
+            "draws": 608,
+            "average_points_per_game": 16.59065,
+            "highest_game_turnover": 115,
+            "average_points_per_trick": 18.62527504602811,
+            "highest_trick_turnover": 53,
+            "type": "SimpleGreedyAgent"
+        }
+    ]
+}

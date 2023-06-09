@@ -1,6 +1,7 @@
 from engine.players import Player
 from prettytable import PrettyTable
 from datetime import datetime
+import os
 import json
 
 
@@ -76,6 +77,7 @@ class StatsRecorder:
         Returns a dictionary of a player's stats, including a calculation of the average points per game.
         """
         return {
+            "type": player.type,
             "wins": self.player_stats[player].get("wins", 0),
             "losses": self.player_stats[player].get("losses", 0),
             "draws": self.player_stats[player].get("draws", 0),
@@ -139,10 +141,13 @@ class StatsRecorder:
             ),
         }
 
+        # Create directory if it doesn't exist
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+
         with open(filename, "w") as f:
             for player in self.player_stats:
                 parsed_stats["players"][player.name] = self.get_player_stats(player)
-                parsed_stats["players"][player.name]["type"] = player.type
 
             json.dump(parsed_stats, f, indent=4)
 

@@ -15,7 +15,7 @@ from utils.stats import StatsRecorder
 # Loading the available player types (excluding Human)
 PLAYER_TYPES = {clazz.__name__: clazz for clazz in Player.__subclasses__() if clazz.__name__ != 'Human'}
 
-def run_simulations(iterations, delay, player_types, graph, interpolate, save):
+def run_simulations(iterations, delay, player_types, graph, interpolate, output, display=False):
     player_instances = []
 
     # Create player instances based on the specified player types
@@ -47,19 +47,26 @@ def run_simulations(iterations, delay, player_types, graph, interpolate, save):
         while not game.is_over():
             game.next_round()
 
-        print(f"Simulated game {i + 1}/{iterations}", end="\r")
 
-    # Display stats table
-    print()
-    stats.print_table()
+        if display:
+            print(f"Simulated game {i + 1}/{iterations}", end="\r")
+
+    if display:
+        # Display stats table
+        print()
+        stats.print_table()
 
     if graph:
         # Display the graph
         display_graph(stats, interpolate=interpolate)
 
-    if (save):
+    if (output):
         # Save the data to file
-        stats.save()
+        stats.save(output)
+
+    return [stats.get_player_stats(player) for player in stats.rank_players("wins")]
+
+    
 
 def display_graph(stats, interpolate=False):
     bar_criteria = ['wins', 'draws', 'average_points_per_game', 'highest_game_turnover', 'average_points_per_trick', 'highest_trick_turnover']
@@ -124,7 +131,7 @@ def main():
     parser.add_argument('--player', action="append", nargs='+', choices=list(PLAYER_TYPES.keys()), help='Player types')
     parser.add_argument('--graph', action="store_true", help='Display graph')
     parser.add_argument('--interpolate', action="store_true", help='Interpolate graph, useful for large number of iterations')
-    parser.add_argument('--save', default=False, action="store_true", help='Save data to file')
+    parser.add_argument('--output', default=None, action="store", help='Save data to file')
     
 
     # Parse the arguments
@@ -143,7 +150,7 @@ def main():
         "GreedyCountingAgent"]
 
     # Run the simulations
-    run_simulations(args.iterations, args.delay, player_types, graph=args.graph, interpolate=args.interpolate, save=args.save)
+    run_simulations(args.iterations, args.delay, player_types, graph=args.graph, interpolate=args.interpolate, output=args.output)
 
 if __name__ == '__main__':
     main()
