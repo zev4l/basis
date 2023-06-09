@@ -15,7 +15,7 @@ In order to install all required dependencies, perform the following command at 
 ```bash
 pip install -r requirements.txt
 ```
-> **Note**: change `pip` for `pip3` if the former isn't registered in your `$PATH`.
+> **Note**: Switch `pip` for `pip3` if the former isn't registered in your `$PATH`.
 
 ### Usage
 #### UI
@@ -42,7 +42,7 @@ The script supports the following command-line arguments:
 ```plaintext
 --iterations <int>      Number of simulations to run (default: 1000)
 --delay <int>           Delay in seconds between each round (default: 0)
---player <type>         Player types to include (choices: all available agent types: RandomAgent, SimplyGreedyAgent, MinimizePointLossGreedyAgent, MPLGreedyTrumpSaveAgent, MPLGreedyTrumpBasedAgent)
+--player <type>         Player types to include (choices: all available agent types: RandomAgent, SimplyGreedyAgent, MinimizePointLossGreedyAgent, MPLGreedyTrumpSaveAgent, MPLGreedyTrumpBasedAgent, GreedyCountingAgent)
 --graph                 Display graph of simulation results
 --interpolate           Interpolate graph for smoother visualization (useful for large number of iterations)
 --save                  Saves obtained metrics to a JSON file

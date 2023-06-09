@@ -203,9 +203,9 @@ class Game:
             winner.add_to_pile(self.current_trick.get_cards())
             log.debug(f"{winner.name}'s pile: {winner.get_pile()}")
 
-            # Record trick turnover
+            # Record trick turnover for winner
             if self.stats_recorder:
-                self.stats_recorder.update_highest_point_turnover(
+                self.stats_recorder.add_trick_points(
                     winner,
                     sum([card.points for card in self.current_trick.get_cards()]),
                 )
@@ -261,7 +261,7 @@ class Game:
             if self.stats_recorder:
                 for player in self.player_pool.players:
                     # Record points for this game
-                    self.stats_recorder.add_points(player, points_per_player[player])
+                    self.stats_recorder.add_game_points(player, points_per_player[player])
 
                     # In case it was a draw
                     if self.state == State.DRAW:

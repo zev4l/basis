@@ -62,10 +62,10 @@ def run_simulations(iterations, delay, player_types, graph, interpolate, save):
         stats.save()
 
 def display_graph(stats, interpolate=False):
-    bar_criteria = ['wins', 'draws', 'average_points_per_game', 'highest_point_turnover']
-    line_criteria = ['point_turnovers']
+    bar_criteria = ['wins', 'draws', 'average_points_per_game', 'highest_game_turnover', 'average_points_per_trick', 'highest_trick_turnover']
+    line_criteria = ['game_turnovers']
 
-    generations = range(1, len(list(stats.player_stats.values())[0]['point_turnovers']) + 1)
+    generations = range(1, len(list(stats.player_stats.values())[0]['game_turnovers']) + 1)
     num_players = len(stats.player_stats)
     ranked_players = stats.rank_players()
 
