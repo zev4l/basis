@@ -15,7 +15,7 @@ from utils.stats import StatsRecorder
 # Loading the available player types (excluding Human)
 PLAYER_TYPES = {clazz.__name__: clazz for clazz in Player.__subclasses__() if clazz.__name__ != 'Human'}
 
-def run_simulations(iterations, delay, player_types, graph, interpolate, output, display=False):
+def run_simulations(iterations, delay, player_types, graph, interpolate, output, display=True):
     player_instances = []
 
     # Create player instances based on the specified player types
