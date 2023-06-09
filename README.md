@@ -74,4 +74,12 @@ The script supports the following command-line arguments:
 
 > **Note** The `--interpolate` option is only valid if `--graph` is specified.
 
----
+## Analysis
+If you're looking to analyze the obtained metrics, you can use the `analysis.py` script. It makes use of `simulate.py` constructs to compute various simulations for each group-size, for every possible combination of agents. It then aggregates each metric for each groups-zie and outputs the results to a JSON file.
+
+To run it, simply execute the following command:
+```bash
+./analysis.py
+```
+
+> **Warning**: This script may take a long time to run, as it performs 100000 simulations for each group-size, for each possible combination of agents (`EXPERIMENT_SIMULATIONS` is set to 100000, though you can change it to a lower value if you want to run it faster, although with less statistical confidence). If you're only looking for pre-computed metrics used to for the tables in the report, you can find them at `report_analysis.json`.
