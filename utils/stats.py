@@ -20,8 +20,8 @@ class StatsRecorder:
                 "wins": 0,
                 "losses": 0,
                 "draws": 0,
-                "point_turnovers": [],  # Per game
-                "highest_point_turnover": 0,  # Per trick
+                "trick_turnovers": [],  # Per trick
+                "game_turnovers": [],  # Per game
             }
 
     def increment_wins(self, player: Player):
@@ -45,20 +45,20 @@ class StatsRecorder:
         self._register_player(player)
         self.player_stats[player]["losses"] += 1
 
-    def add_points(self, player: Player, points: int):
+    def add_game_points(self, player: Player, points: int):
         """
         Adds the number of points a player scored per game.
         """
         self._register_player(player)
-        self.player_stats[player]["point_turnovers"].append(points)
+        self.player_stats[player]["game_turnovers"].append(points)
 
-    def update_highest_point_turnover(self, player: Player, points: int):
+    def add_trick_points(self, player: Player, points: int):
         """
-        Updates the highest number of points a player scored in a single trick.
+        Adds the number of points a player scored per trick.
         """
         self._register_player(player)
-        if points > self.player_stats[player]["highest_point_turnover"]:
-            self.player_stats[player]["highest_point_turnover"] = points
+        self._register_player(player)
+        self.player_stats[player]["trick_turnovers"].append(points)
 
     def compare_players(self, player1: Player, player2: Player):
         """
@@ -79,15 +79,21 @@ class StatsRecorder:
             "wins": self.player_stats[player].get("wins", 0),
             "losses": self.player_stats[player].get("losses", 0),
             "draws": self.player_stats[player].get("draws", 0),
-            "average_points_per_game": sum(
-                self.player_stats[player].get("point_turnovers", 0)
-            )
-            / len(self.player_stats[player].get("point_turnovers", 0))
-            if self.player_stats[player].get("point_turnovers", False)
+            "average_points_per_game": sum(self.player_stats[player].get("game_turnovers", 0)) / len(self.player_stats[player].get("game_turnovers", 0))
+            if self.player_stats[player].get("game_turnovers", False)
             else 0,
-            "highest_point_turnover": self.player_stats[player].get(
-                "highest_point_turnover", 0
+            "highest_game_turnover": max(
+                self.player_stats[player].get("game_turnovers", 0)
             ),
+            "average_points_per_trick": sum(
+                self.player_stats[player].get("trick_turnovers", 0)
+            )
+            / len(self.player_stats[player].get("trick_turnovers", 0))
+            if self.player_stats[player].get("trick_turnovers", False)
+            else 0,
+            "highest_trick_turnover": max(
+                self.player_stats[player].get("trick_turnovers", 0)
+            )
         }
 
     def rank_players(self, criterion="wins"):
@@ -103,18 +109,18 @@ class StatsRecorder:
         elif criterion == "points":
             sorted_players = sorted(
                 self.player_stats.keys(),
-                key=lambda p: sum(self.player_stats[p]["point_turnovers"]),
+                key=lambda p: sum(self.player_stats[p]["game_turnovers"]),
                 reverse=True,
             )
-        elif criterion == "average_point_turnover":
+        elif criterion == "average_game_turnover":
             sorted_players = sorted(
                 self.player_stats.keys(),
-                key=lambda p: self.player_stats[p]["average_point_turnover"],
+                key=lambda p: self.player_stats[p]["average_game_turnover"],
                 reverse=True,
             )
         else:
             raise ValueError(
-                "Invalid criterion. Available options are 'wins', 'points', and 'average_point_turnover'."
+                "Invalid criterion. Available options are 'wins', 'points', and 'average_game_turnover'."
             )
 
         return sorted_players
@@ -129,7 +135,7 @@ class StatsRecorder:
         parsed_stats = {
             "players": {},
             "iterations": len(
-                self.player_stats[list(self.player_stats.keys())[0]]["point_turnovers"]
+                self.player_stats[list(self.player_stats.keys())[0]]["game_turnovers"]
             ),
         }
 
@@ -155,6 +161,8 @@ class StatsRecorder:
             "Losses",
             "W/L Ratio",
             "Average Points / Game",
+            "Highest Point Turnover (Game)",
+            "Average Points / Trick",
             "Highest Point Turnover (Trick)",
         ]
 
@@ -176,9 +184,12 @@ class StatsRecorder:
                     stats["losses"],
                     f"{win_loss_ratio:.5f}",
                     f"{stats['average_points_per_game']:.2f}",
-                    stats["highest_point_turnover"],
+                    stats["highest_game_turnover"],
+                    f"{stats['average_points_per_trick']:.2f}",
+                    stats["highest_trick_turnover"],
                 ]
             )
+            table.align = "l"
 
         print(f"Ranking based on {criterion}:")
         print(table)
