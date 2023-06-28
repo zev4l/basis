@@ -1,7 +1,8 @@
 # BASIS
 > Bisca Agent Strategy Intelligent System, a multi-agent platform for implementing AI-driven strategies in the game of Bisca. 
 
-This repository hosts our project for the course of Autonomous Agents and Multi-Agent Systems (AASMA) @ Instituto Superior Técnico for the year of 2022/2023.
+This repository hosts our project for the course of Autonomous Agents and Multi-Agent Systems (AASMA) @ Instituto Superior Técnico for the year of 2022/2023. A [paper](paper.pdf) is also included, which provides a detailed overview of the project, its implementation, and the obtained results.
+
 ### Authorship
 #### Alameda, Group 30
 * José Almeida (IST1105793)
